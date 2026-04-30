@@ -4,7 +4,8 @@
 #include <thread>
 #include <chrono>
 
-#include "include/message_queue.hpp"
+#include "include/queues/message_queue.hpp"
+#include "include/common/message.hpp"
 
 bool test_empty() {
     MessageQueue<std::string> msg_q("testing");
