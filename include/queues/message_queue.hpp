@@ -8,8 +8,8 @@
 template <typename T>
 class MessageQueue {
 public:
-    MessageQueue(std::string device_name)
-        : m_device_name(device_name) {}
+    MessageQueue(std::string device_id)
+        : m_device_id(device_id) {}
 
     void push(const T& message) {
         std::unique_lock<std::mutex> lock(m_mutex);
@@ -39,5 +39,5 @@ private:
     std::deque<T> m_queue;
     std::mutex m_mutex;
     std::condition_variable m_convar;
-    std::string m_device_name;
+    std::string m_device_id;
 };
