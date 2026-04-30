@@ -6,7 +6,9 @@
 
 Message SimpleEncoder::encode(const std::string &input) { 
     size_t split_ind = input.find(':') ;
-    
+    if (split_ind == std::string::npos) {
+        throw std::runtime_error("message has the wrong format");
+    }
     std::string device = input.substr(0,split_ind);
     std::string cmd = input.substr(split_ind+1);
     std::string user_id = "def_user";
