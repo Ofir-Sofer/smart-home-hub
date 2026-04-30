@@ -1,11 +1,7 @@
 #include <iostream>
 #include <string>
-#include <vector>
-#include <thread>
-#include <chrono>
 
-#include "queues/message_queue.hpp"
-#include "tests/test_queue.cpp"
+#include "common/message.hpp"
 
 bool test_message() {
     std::string device = "device_A";
