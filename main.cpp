@@ -7,19 +7,19 @@
 #include "include/queues/message_queue.hpp"
 #include "include/common/message.hpp"
 
-bool test_empty() {
+bool test_queue_empty() {
     MessageQueue<std::string> msg_q("testing");
     return msg_q.empty();
 }
 
-bool test_push_and_pop() {
+bool test_queue_push_and_pop() {
     std::string msg = "this is a message";
     MessageQueue<std::string> msg_q("testing");
     msg_q.push(msg);
     return msg_q.pop() == msg;
 }
 
-bool test_push_pop_order() {
+bool test_queue_push_pop_order() {
     const int msg_count = 3;
     MessageQueue<int> msg_q("testing");
     for (int i=0 ; i<msg_count ; i++) {
@@ -35,7 +35,7 @@ bool test_push_pop_order() {
     return ret_val;
 }
 
-bool test_push_urgent() {
+bool test_queue_push_urgent() {
     //this make sure that an urgent test gets the priority even if more messages got pushed after the urgent
     std::string msg1 = "regular message #1";
     std::string msg2 = "regular message #2";
@@ -47,9 +47,7 @@ bool test_push_urgent() {
     return msg_q.pop() == urgent_msg;
 }
 
-// void 
-
-bool test_threads() {
+bool test_queue_threads() {
     MessageQueue<std::string> msg_q("testing");
     std::string poped_msg;
 
@@ -65,15 +63,29 @@ bool test_threads() {
 }
 
 void run_queue_tests() {
-    std::cout << "test_empty: " << (test_empty() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_push_and_pop: " << (test_push_and_pop() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_push_pop_order: " << (test_push_pop_order() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_push_urgent: " << (test_push_urgent() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_threads: " << (test_threads() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_queue_empty: " << (test_queue_empty() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_queue_push_and_pop: " << (test_queue_push_and_pop() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_queue_push_pop_order: " << (test_queue_push_pop_order() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_queue_push_urgent: " << (test_queue_push_urgent() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_queue_threads: " << (test_queue_threads() ? "PASS" : "FAIL") << "\n";
+}
+
+bool test_message() {
+    std::string device = "device_A";
+    std::string cmd = "turn on";
+    std::string user_id = "user_123";
+    Direction target = Direction::TO_DEVICE;
+    Message msg = {device, cmd, user_id, target};
+    return msg.m_device_id == device && msg.m_cmd == cmd && msg.m_user_id == user_id && msg.m_target == target;
+}
+
+void run_message_tests() {
+    std::cout << "test_message: " << (test_message() ? "PASS" : "FAIL") << "\n";
 }
 
 int main() {
     std::cout << "Smart Home Hub starting...\n";
     run_queue_tests();
+    run_message_tests();
     return 0;
 }
