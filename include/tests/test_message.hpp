@@ -1,0 +1,1 @@
+void run_message_tests();

@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "tests/test_queue.cpp"
-#include "tests/test_message.cpp"
+#include "tests/test_queue.hpp"
+#include "tests/test_message.hpp"
 
 int main() {
     std::cout << "Smart Home Hub starting...\n";
