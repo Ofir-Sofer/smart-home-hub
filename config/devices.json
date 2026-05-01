@@ -1,0 +1,8 @@
+{
+    "devices": [
+        {
+            "device_id": "dummy_test",
+            "device_type": "dummy"
+        }
+    ]
+}
