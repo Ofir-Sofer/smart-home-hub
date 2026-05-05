@@ -10,9 +10,7 @@
 #include "devices/dummy_device.hpp"
 
 DeviceFactory::DeviceFactory(const std::string& config_path) {
-    m_device_constructors["dummy_device"] = [](const std::string& device_id) {
-        return std::make_unique<DummyDevice>(device_id);
-    };
+    m_device_constructors = register_constructors();
     std::ifstream file(config_path);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open devices.json");
@@ -37,4 +35,14 @@ IDevice* DeviceFactory::get_device(const std::string &device_id) {
         return it->second.get();
     }
     return nullptr;
+}
+std::unordered_map<std::string,
+                   std::function<std::unique_ptr<IDevice>(const std::string &)>>
+DeviceFactory::register_constructors() {
+    std::unordered_map<std::string,
+                   std::function<std::unique_ptr<IDevice>(const std::string &)>> device_constructors;
+    device_constructors["dummy_device"] = [](const std::string& device_id) {
+        return std::make_unique<DummyDevice>(device_id);
+    };
+    return device_constructors;
 }
