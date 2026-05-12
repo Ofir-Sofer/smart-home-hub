@@ -5,6 +5,7 @@
 #include "tests/test_simple_encoder.hpp"
 #include "tests/test_dummy_device.hpp"
 #include "tests/test_device_factory.hpp"
+#include "tests/test_device_registry.hpp"
 
 int main() {
     std::cout << "Smart Home Hub starting...\n";
@@ -13,5 +14,6 @@ int main() {
     run_simple_encoder_tests();
     run_dummy_device_tests();
     run_device_factory_tests();
+    run_device_registry_tests();
     return 0;
 }

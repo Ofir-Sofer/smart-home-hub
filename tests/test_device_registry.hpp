@@ -1,0 +1,1 @@
+void run_device_registry_tests();
