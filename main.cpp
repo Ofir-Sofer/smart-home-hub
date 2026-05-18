@@ -6,6 +6,7 @@
 #include "tests/test_dummy_device.hpp"
 #include "tests/test_device_factory.hpp"
 #include "tests/test_device_registry.hpp"
+#include "tests/test_server.hpp"
 
 int main() {
     std::cout << "Smart Home Hub starting...\n";
@@ -15,5 +16,6 @@ int main() {
     run_dummy_device_tests();
     run_device_factory_tests();
     run_device_registry_tests();
+    run_server_tests();
     return 0;
 }
