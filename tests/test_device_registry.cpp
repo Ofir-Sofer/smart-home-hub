@@ -5,7 +5,7 @@
 #include "devices/idevice.hpp"
 
 bool test_registry_valid_device() {
-    std::string conf_path = "config/devices.json";
+    std::string conf_path = "config/test_devices.json";
     DeviceFactory device_factory(conf_path);
     std::string device_id = "dummy_test";
     DeviceRegistry device_registry(device_factory);
@@ -14,7 +14,7 @@ bool test_registry_valid_device() {
 }
 
 bool test_registry_invalid_device() {
-    std::string conf_path = "config/devices.json";
+    std::string conf_path = "config/test_devices.json";
     DeviceFactory device_factory(conf_path);
     std::string device_id = "non_existent";
     DeviceRegistry device_registry(device_factory);
@@ -22,9 +22,34 @@ bool test_registry_invalid_device() {
     return invalid_device == nullptr;
 }
 
+bool test_device_queue_valid() {
+    std::string conf_path = "config/test_devices.json";
+    DeviceFactory device_factory(conf_path);
+    DeviceRegistry device_registry(device_factory);
+    std::string dummy_id = "dummy_test";
+    if (device_registry.get_queue(dummy_id) != nullptr) {
+        return true;
+    }
+    return false;
+}
+
+bool test_device_queue_invalid() {
+    std::string conf_path = "config/test_devices.json";
+    DeviceFactory device_factory(conf_path);
+    DeviceRegistry device_registry(device_factory);
+    std::string dummy_id = "invalid_device";
+    if (device_registry.get_queue(dummy_id) == nullptr) {
+        return true;
+    }
+    return false;
+}
+
+
 void run_device_registry_tests() {
     std::cout << "START DEVICE REGISTRY TESTS:\n";
     std::cout << "test_registry_valid_device: " << (test_registry_valid_device() ? "PASS" : "FAIL") << "\n";
     std::cout << "test_registry_invalid_device: " << (test_registry_invalid_device() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_device_queue_valid: " << (test_device_queue_valid() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_device_queue_invalid: " << (test_device_queue_invalid() ? "PASS" : "FAIL") << "\n";
     std::cout << "END DEVICE REGISTRY TESTS\n";
 }
