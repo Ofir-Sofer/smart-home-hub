@@ -27,10 +27,7 @@ bool test_device_queue_valid() {
     DeviceFactory device_factory(conf_path);
     DeviceRegistry device_registry(device_factory);
     std::string dummy_id = "dummy_test";
-    if (device_registry.get_queue(dummy_id) != nullptr) {
-        return true;
-    }
-    return false;
+    return device_registry.get_queue(dummy_id) != nullptr;
 }
 
 bool test_device_queue_invalid() {
@@ -38,10 +35,7 @@ bool test_device_queue_invalid() {
     DeviceFactory device_factory(conf_path);
     DeviceRegistry device_registry(device_factory);
     std::string dummy_id = "invalid_device";
-    if (device_registry.get_queue(dummy_id) == nullptr) {
-        return true;
-    }
-    return false;
+    return device_registry.get_queue(dummy_id) == nullptr;
 }
 
 
