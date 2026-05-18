@@ -51,9 +51,8 @@ std::vector<std::string> DeviceFactory::get_device_id_list() {
     std::vector<std::string> device_id_list;
     device_id_list.reserve(m_device_map.size());
     auto it = m_device_map.begin();
-    while (it != m_device_map.end()) {
-        device_id_list.push_back(it->first);
-        ++it;
+    for (const auto& pair : m_device_map) {
+        device_id_list.push_back(pair.first);
     }
     return device_id_list;
 }

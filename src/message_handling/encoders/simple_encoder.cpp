@@ -2,6 +2,8 @@
 
 #include <string>
 #include <sstream>
+#include <stdexcept>
+
 #include "common/message.hpp"
 
 Message SimpleEncoder::encode(const std::string &input) { 

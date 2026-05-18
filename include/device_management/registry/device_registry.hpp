@@ -16,10 +16,7 @@ public:
     IDevice* get_device(const std::string& device_id);
     MessageQueue<Message>* get_queue(const std::string& device_id);
 
-
 private:
     DeviceFactory& m_factory;
-    // std::vector<std::string> m_device_id_list;
     std::unordered_map<std::string, MessageQueue<Message>> m_device_queues;
-
 };
