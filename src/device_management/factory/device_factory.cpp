@@ -40,8 +40,11 @@ IDevice* DeviceFactory::get_device(const std::string &device_id) {
 std::unordered_map < std::string, std::function<std::unique_ptr<IDevice>(const std::string &)>>
 DeviceFactory::register_constructors() {
     std::unordered_map<std::string,
-                   std::function<std::unique_ptr<IDevice>(const std::string &)>> device_constructors;
+                   std::function<std::unique_ptr<IDevice>(const std::string &)>> device_constructors; // the key for the map is device_type
     device_constructors["dummy_device"] = [](const std::string& device_id) {
+        return std::make_unique<DummyDevice>(device_id);
+    };
+    device_constructors["vacuum_sim_cleaner"] = [](const std::string& device_id) {
         return std::make_unique<DummyDevice>(device_id);
     };
     return device_constructors;
@@ -50,7 +53,6 @@ DeviceFactory::register_constructors() {
 std::vector<std::string> DeviceFactory::get_device_id_list() {
     std::vector<std::string> device_id_list;
     device_id_list.reserve(m_device_map.size());
-    auto it = m_device_map.begin();
     for (const auto& pair : m_device_map) {
         device_id_list.push_back(pair.first);
     }
