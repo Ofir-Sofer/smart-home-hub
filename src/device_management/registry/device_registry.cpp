@@ -7,8 +7,8 @@
 DeviceRegistry::DeviceRegistry(DeviceFactory& factory) 
     : m_factory(factory) {
     std::vector<std::string> device_id_list = m_factory.get_device_id_list();
-    for (auto it = device_id_list.begin(); it != device_id_list.end(); ++it) {
-        m_device_queues.emplace(*it,*it);
+    for (const auto& id : device_id_list) {
+        m_device_queues.emplace(id,id);
     }
 }
 

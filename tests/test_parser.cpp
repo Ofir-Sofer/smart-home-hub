@@ -16,7 +16,7 @@ bool test_parser_proccess_message() {
     Server server(device_registry);
     Parser parser(user_input_queue, encoder, server);
     std::string device_id = "vacuum_sim";
-    std::string cmd = "activate cleaner";
+    std::string cmd = "success";
     std::string user_input = device_id + ":" + cmd;
     user_input_queue.push(user_input);
     parser.process_message();

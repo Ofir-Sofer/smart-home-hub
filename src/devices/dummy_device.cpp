@@ -3,7 +3,7 @@
 
 DeviceResult DummyDevice::process_command(const Message& input_msg) {
     DeviceResult res;
-    if (input_msg.m_cmd == "success" || input_msg.m_cmd == "activate cleaner") {
+    if (input_msg.m_cmd == "success") {
         res.data = "success";
         res.status = DeviceStatus::SUCCESS;
     } else if (input_msg.m_cmd == "fail") {
