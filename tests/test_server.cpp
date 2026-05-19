@@ -43,12 +43,12 @@ bool test_server_invalid_device() {
 bool test_server_route_to_user(){
     std::string conf_path = "config/test_devices.json";
     DeviceFactory device_factory(conf_path);
-    std::string invalid_device_id = "invalid_device";
+    std::string device_id = "dummy_test";
     DeviceRegistry device_registry(device_factory);
     Server server(device_registry);
     DeviceResult device_res = {DeviceStatus::SUCCESS, 1};
     std::string user_id = "user123";
-    server.route_to_user(device_res, user_id);
+    server.route_to_user(device_res, user_id, device_id);
     // route_to_user currently prints to console - no return value to verify
     // test just ensures it doesn't crash
     return true;

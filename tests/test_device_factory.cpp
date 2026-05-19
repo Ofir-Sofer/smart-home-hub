@@ -47,9 +47,3 @@ void run_device_factory_tests() {
     std::cout << "test_device_list: " << (test_device_list() ? "PASS" : "FAIL") << "\n";
     std::cout << "END DEVICE FACTORY TESTS\n";
 }
-
-
-
-
-std::vector<int> v = {1, 2, 3};
-bool found = std::find(v.begin(), v.end(), 2) != v.end();
