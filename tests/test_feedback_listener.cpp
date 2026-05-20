@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 
+#include "test_feedback_listener.hpp"
 #include "listener/feedback_listener.hpp"
 #include "device_management/factory/device_factory.hpp"
 #include "device_management/registry/device_registry.hpp"

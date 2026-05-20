@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 
+#include "test_simple_encoder.hpp"
 #include "message_handling/encoders/simple_encoder.hpp"
 #include "common/message.hpp"
 

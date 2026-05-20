@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 
+#include "test_device_factory.hpp"
 #include "device_management/factory/device_factory.hpp"
 #include "devices/idevice.hpp"
 

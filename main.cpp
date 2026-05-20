@@ -9,6 +9,7 @@
 #include "tests/test_server.hpp"
 #include "tests/test_feedback_listener.hpp"
 #include "tests/test_parser.hpp"
+#include "tests/test_listener.hpp"
 
 int main() {
     std::cout << "Smart Home Hub starting...\n";
@@ -21,5 +22,6 @@ int main() {
     run_server_tests();
     run_feedback_listener_tests();
     run_parser_tests();
+    run_listener_tests();
     return 0;
 }

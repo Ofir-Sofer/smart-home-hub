@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 
+#include "test_device_registry.hpp"
 #include "device_management/registry/device_registry.hpp"
 #include "device_management/factory/device_factory.hpp"
 #include "devices/idevice.hpp"

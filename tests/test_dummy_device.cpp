@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 
+#include "test_dummy_device.hpp"
 #include "devices/dummy_device.hpp"
 #include "common/device_result.hpp"
 #include "common/message.hpp"

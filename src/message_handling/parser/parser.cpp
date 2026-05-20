@@ -7,7 +7,7 @@
 #include "common/message.hpp"
 
 void Parser::process_message() {
-    std::string user_input = m_user_input_queue.pop();
+    std::string user_input = m_main_queue.pop();
     Message msg = m_encoder.encode(user_input);
     m_server.push_to_device_queue(msg);
 }
