@@ -18,6 +18,6 @@ bool test_listener_push(){
 
 void run_listener_tests() {
     std::cout << "START LISTENER TESTS:\n";
-    std::cout << "test_listener_push: " << (test_listener_push() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_listener_push: " << (test_listener_push() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "END LISTENER TESTS\n";
 }

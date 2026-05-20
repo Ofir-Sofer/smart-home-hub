@@ -32,6 +32,6 @@ bool test_dummy_device() {
 
 void run_dummy_device_tests() {
     std::cout << "START DUMMY DEVICE TESTS:\n";
-    std::cout << "test_dummy_device: " << (test_dummy_device() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_dummy_device: " << (test_dummy_device() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "END DUMMY DEVICE TESTS\n";
 }

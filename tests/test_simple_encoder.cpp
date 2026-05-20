@@ -18,6 +18,6 @@ bool test_simple_encoder() {
 
 void run_simple_encoder_tests() {
     std::cout << "START SIMPLE ENCODER TESTS:\n";
-    std::cout << "test_simple_encoder: " << (test_simple_encoder() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_simple_encoder: " << (test_simple_encoder() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "END SIMPLE ENCODER TESTS\n";
 }

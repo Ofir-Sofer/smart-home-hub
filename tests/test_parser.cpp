@@ -30,6 +30,6 @@ bool test_parser_proccess_message() {
 
 void run_parser_tests() {
     std::cout << "START PARSER TESTS:\n";
-    std::cout << "test_parser_proccess_message: " << (test_parser_proccess_message() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_parser_proccess_message: " << (test_parser_proccess_message() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "END PARSER TESTS\n";
 }

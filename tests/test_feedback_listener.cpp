@@ -27,6 +27,6 @@ bool test_feedback_listener_route_to_user() {
 
 void run_feedback_listener_tests() {
     std::cout << "START FEEDBACK LISTENER TESTS:\n";
-    std::cout << "test_feedback_listener_route_to_user: " << (test_feedback_listener_route_to_user() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_feedback_listener_route_to_user: " << (test_feedback_listener_route_to_user() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "END FEEDBACK LISTENER TESTS\n";
 }

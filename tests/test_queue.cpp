@@ -65,10 +65,10 @@ bool test_queue_threads() {
 
 void run_queue_tests() {
     std::cout << "START QUEUE TESTS:\n";
-    std::cout << "test_queue_empty: " << (test_queue_empty() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_queue_push_and_pop: " << (test_queue_push_and_pop() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_queue_push_pop_order: " << (test_queue_push_pop_order() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_queue_push_urgent: " << (test_queue_push_urgent() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_queue_threads: " << (test_queue_threads() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_queue_empty: " << (test_queue_empty() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
+    std::cout << "test_queue_push_and_pop: " << (test_queue_push_and_pop() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
+    std::cout << "test_queue_push_pop_order: " << (test_queue_push_pop_order() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
+    std::cout << "test_queue_push_urgent: " << (test_queue_push_urgent() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
+    std::cout << "test_queue_threads: " << (test_queue_threads() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "END QUEUE TESTS\n";
 }

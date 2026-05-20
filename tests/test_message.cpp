@@ -15,6 +15,6 @@ bool test_message() {
 
 void run_message_tests() {
     std::cout << "START MESSAGE TESTS:\n";
-    std::cout << "test_message: " << (test_message() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_message: " << (test_message() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "END MESSAGE TESTS\n";
 }

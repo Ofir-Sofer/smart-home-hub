@@ -57,8 +57,8 @@ bool test_server_route_to_user(){
 
 void run_server_tests() {
     std::cout << "START SERVER TESTS:\n";
-    std::cout << "test_server_push_to_queue: " << (test_server_push_to_queue() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_server_invalid_device: " << (test_server_invalid_device() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_server_route_to_user: " << (test_server_route_to_user() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_server_push_to_queue: " << (test_server_push_to_queue() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
+    std::cout << "test_server_invalid_device: " << (test_server_invalid_device() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
+    std::cout << "test_server_route_to_user: " << (test_server_route_to_user() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "END SERVER TESTS\n";
 }

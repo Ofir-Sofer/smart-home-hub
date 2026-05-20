@@ -43,9 +43,9 @@ bool test_device_queue_invalid() {
 
 void run_device_registry_tests() {
     std::cout << "START DEVICE REGISTRY TESTS:\n";
-    std::cout << "test_registry_valid_device: " << (test_registry_valid_device() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_registry_invalid_device: " << (test_registry_invalid_device() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_device_queue_valid: " << (test_device_queue_valid() ? "PASS" : "FAIL") << "\n";
-    std::cout << "test_device_queue_invalid: " << (test_device_queue_invalid() ? "PASS" : "FAIL") << "\n";
+    std::cout << "test_registry_valid_device: " << (test_registry_valid_device() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
+    std::cout << "test_registry_invalid_device: " << (test_registry_invalid_device() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
+    std::cout << "test_device_queue_valid: " << (test_device_queue_valid() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
+    std::cout << "test_device_queue_invalid: " << (test_device_queue_invalid() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "END DEVICE REGISTRY TESTS\n";
 }
