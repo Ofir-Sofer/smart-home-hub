@@ -9,8 +9,8 @@
 
 class Parser {
 public:
-    Parser(MessageQueue<std::string>& user_input_queue, IEncoder& encoder, Server& server)
-    :m_main_queue(user_input_queue), m_encoder(encoder), m_server(server){};
+    Parser(MessageQueue<std::string>& main_queue, IEncoder& encoder, Server& server)
+    :m_main_queue(main_queue), m_encoder(encoder), m_server(server){};
     
     void process_message();
 
