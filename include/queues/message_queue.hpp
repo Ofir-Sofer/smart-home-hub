@@ -8,7 +8,7 @@
 template <typename T>
 class MessageQueue {
 public:
-    MessageQueue(std::string device_id)
+    MessageQueue(const std::string& device_id)
         : m_device_id(device_id) {}
 
     void push(const T& message) {
@@ -23,7 +23,7 @@ public:
         m_convar.notify_one();
     }
 
-    T pop() {
+    [[nodiscard]] T pop() {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_convar.wait(lock, [this] { return !m_queue.empty();});
         T value = m_queue.front();
@@ -31,13 +31,13 @@ public:
         return value;
     }
 
-    bool empty() {
+    [[nodiscard]] bool empty() const {
         std::unique_lock<std::mutex> lock(m_mutex);
         return m_queue.empty();
     }
 private:
     std::deque<T> m_queue;
-    std::mutex m_mutex;
+    mutable std::mutex m_mutex;
     std::condition_variable m_convar;
     std::string m_device_id;
 };

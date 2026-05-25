@@ -8,7 +8,7 @@
 
 
 bool compare_device_results(const DeviceResult& res1, const DeviceResult& res2) {
-    return res1.status == res2.status && res1.data == res2.data;
+    return res1.m_status == res2.m_status && res1.m_data == res2.m_data;
 }
 
 bool test_dummy_device() {

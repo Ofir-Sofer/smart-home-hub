@@ -1,12 +1,11 @@
 #include "message_handling/encoders/simple_encoder.hpp"
 
 #include <string>
-#include <sstream>
 #include <stdexcept>
 
 #include "common/message.hpp"
 
-Message SimpleEncoder::encode(const std::string &input) { 
+Message SimpleEncoder::encode(const std::string &input) const { 
     size_t split_ind = input.find(':') ;
     if (split_ind == std::string::npos) {
         throw std::runtime_error("message has the wrong format");

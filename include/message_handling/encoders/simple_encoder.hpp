@@ -4,5 +4,5 @@
 
 class SimpleEncoder : public IEncoder {
 public:
-    Message encode(const std::string& input) override;
+    Message encode(const std::string& input) const override;
 };

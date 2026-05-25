@@ -13,7 +13,7 @@ DeviceFactory::DeviceFactory(const std::string& config_path) {
     m_device_constructors = register_constructors();
     std::ifstream file(config_path);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open devices.json");
+        throw std::runtime_error("Could not open: " + config_path);
     }
     nlohmann::json j;
     file >> j;

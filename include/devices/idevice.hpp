@@ -11,5 +11,6 @@ public:
 
     virtual DeviceResult process_command(const Message& input_msg) = 0;
 protected:
+    IDevice(const std::string& device_id) : m_device_id(device_id) {};
     std::string m_device_id;
 };

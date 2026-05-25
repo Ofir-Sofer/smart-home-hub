@@ -11,7 +11,7 @@
 class DeviceFactory {
 public:
     DeviceFactory(const std::string& config_path);
-    IDevice* get_device(const std::string& device_id);
+    [[nodiscard]] IDevice* get_device(const std::string& device_id);
     std::vector<std::string> get_device_id_list();
 private:
     std::unordered_map<std::string, std::unique_ptr<IDevice>> m_device_map;

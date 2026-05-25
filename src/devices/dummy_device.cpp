@@ -4,14 +4,14 @@
 DeviceResult DummyDevice::process_command(const Message& input_msg) {
     DeviceResult res;
     if (input_msg.m_cmd == "success") {
-        res.data = "success";
-        res.status = DeviceStatus::SUCCESS;
+        res.m_data = "success";
+        res.m_status = DeviceStatus::SUCCESS;
     } else if (input_msg.m_cmd == "fail") {
-        res.data = "fail";
-        res.status = DeviceStatus::FAILURE;
+        res.m_data = "fail";
+        res.m_status = DeviceStatus::FAILURE;
     } else {
-        res.data = "waiting for response";
-        res.status = DeviceStatus::AWAITING_CONFIRMATION;
+        res.m_data = "waiting for response";
+        res.m_status = DeviceStatus::AWAITING_CONFIRMATION;
     }
     return res;
 }

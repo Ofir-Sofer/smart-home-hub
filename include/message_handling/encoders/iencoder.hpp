@@ -8,5 +8,5 @@ class IEncoder {
 public:
     virtual ~IEncoder() = default;
 
-    virtual Message encode(const std::string& input) = 0;
+    [[nodiscard]] virtual Message encode(const std::string& input) const = 0;
 };

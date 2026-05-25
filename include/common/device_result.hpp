@@ -11,6 +11,6 @@ enum class DeviceStatus {
 
 
 struct DeviceResult {
-    DeviceStatus status;
-    std::variant<std::string, int, float> data;
+    DeviceStatus m_status;
+    std::variant<std::string, int, float> m_data;
 };

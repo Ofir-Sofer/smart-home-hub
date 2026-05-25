@@ -13,8 +13,8 @@ class DeviceRegistry {
 public:
     DeviceRegistry(DeviceFactory& factory);
 
-    IDevice* get_device(const std::string& device_id);
-    MessageQueue<Message>* get_queue(const std::string& device_id);
+    [[nodiscard]] IDevice* get_device(const std::string& device_id);
+    [[nodiscard]] MessageQueue<Message>* get_queue(const std::string& device_id);
 
 private:
     DeviceFactory& m_factory;
