@@ -13,7 +13,11 @@ class DeviceRegistry {
 public:
     DeviceRegistry(DeviceFactory& factory);
 
+    // Returns a non-owning pointer. Do not delete.
+    // Lifetime is tied to the DeviceRegistry instance.
     [[nodiscard]] IDevice* get_device(const std::string& device_id);
+    // Returns a non-owning pointer. Do not delete.
+    // Lifetime is tied to the DeviceRegistry instance.
     [[nodiscard]] MessageQueue<Message>* get_queue(const std::string& device_id);
 
 private:

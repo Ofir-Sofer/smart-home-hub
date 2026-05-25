@@ -35,6 +35,7 @@ public:
         std::unique_lock<std::mutex> lock(m_mutex);
         return m_queue.empty();
     }
+
 private:
     std::deque<T> m_queue;
     mutable std::mutex m_mutex;

@@ -11,6 +11,7 @@ public:
     :m_server(server){};
     
     void forward_to_user(const DeviceResult& device_res, const std::string& user_id, const std::string& device_id);
+
 private:
     Server& m_server;
 };

@@ -37,10 +37,8 @@ IDevice* DeviceFactory::get_device(const std::string &device_id) {
     return nullptr;
 }
 
-std::unordered_map < std::string, std::function<std::unique_ptr<IDevice>(const std::string &)>>
-DeviceFactory::register_constructors() {
-    std::unordered_map<std::string,
-                   std::function<std::unique_ptr<IDevice>(const std::string &)>> device_constructors; // the key for the map is device_type
+DeviceFactory::ConstructorMap DeviceFactory::register_constructors() {
+    DeviceFactory::ConstructorMap device_constructors; // the key for the map is device_type
     device_constructors["dummy_device"] = [](const std::string& device_id) {
         return std::make_unique<DummyDevice>(device_id);
     };

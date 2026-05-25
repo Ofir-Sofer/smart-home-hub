@@ -13,6 +13,7 @@ public:
     :m_main_queue(user_input_queue), m_encoder(encoder), m_server(server){};
     
     void process_message();
+
 private:
     MessageQueue<std::string>& m_main_queue;
     IEncoder& m_encoder;
