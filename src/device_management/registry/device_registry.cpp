@@ -23,3 +23,9 @@ MessageQueue<Message>* DeviceRegistry::get_queue(const std::string &device_id) {
     }
     return nullptr;
 }
+
+void DeviceRegistry::shutdown_all_queues() {
+    for (auto& it : m_device_queues) {
+        it.second.shutdown();
+    }
+}
