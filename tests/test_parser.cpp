@@ -22,7 +22,11 @@ bool test_parser_proccess_message() {
     user_input_queue.push(user_input);
     parser.process_message();
     MessageQueue<Message>* vacuum_sim_queue = device_registry.get_queue("vacuum_sim");
-    Message poped_msg = vacuum_sim_queue->pop();
+    std::optional<Message> wrapped_poped_msg = vacuum_sim_queue->pop();
+    if (!wrapped_poped_msg.has_value()) {
+        return false;
+    }
+    Message poped_msg = wrapped_poped_msg.value();
     std::string simple_encoder_default_user_id = "def_user";
     Direction simple_encoder_default_target = Direction::TO_DEVICE;
     return poped_msg.m_device_id == device_id && poped_msg.m_cmd == cmd && poped_msg.m_user_id == simple_encoder_default_user_id && poped_msg.m_target == simple_encoder_default_target;

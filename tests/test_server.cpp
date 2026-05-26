@@ -22,7 +22,11 @@ bool test_server_push_to_queue() {
     Message msg = {device_id, cmd, user_id, target};
     server.push_to_device_queue(msg);
     MessageQueue<Message>* msg_q = device_registry.get_queue(device_id);
-    Message poped_msg = msg_q->pop();
+    std::optional<Message> wrapped_poped_msg = msg_q->pop();
+    if (!wrapped_poped_msg.has_value()) {
+        return false;
+    }
+    Message poped_msg = wrapped_poped_msg.value();
     return poped_msg.m_device_id == device_id;
 }
 

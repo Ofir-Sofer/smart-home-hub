@@ -3,6 +3,7 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <optional>
 
 #include "test_queue.hpp"
 #include "queues/message_queue.hpp"
@@ -17,7 +18,8 @@ bool test_queue_push_and_pop() {
     std::string msg = "this is a message";
     MessageQueue<std::string> msg_q("testing");
     msg_q.push(msg);
-    return msg_q.pop() == msg;
+    std::optional<std::string> wrapped_pop_msg = msg_q.pop();
+    return wrapped_pop_msg.value_or("") == msg;
 }
 
 bool test_queue_push_pop_order() {
@@ -27,8 +29,10 @@ bool test_queue_push_pop_order() {
         msg_q.push(i);
     }
     bool ret_val = true;
+    std::optional<int> wrapped_pop_msg;
     for (int i=0 ; i<msg_count ; i++) {
-        if (msg_q.pop() != i) {
+        wrapped_pop_msg = msg_q.pop();
+        if (wrapped_pop_msg.value_or(999) != i) {
             ret_val = false;
             break;
         }
@@ -45,22 +49,23 @@ bool test_queue_push_urgent() {
     msg_q.push(msg1);
     msg_q.push_urgent(urgent_msg);
     msg_q.push(msg2);
-    return msg_q.pop() == urgent_msg;
+    std::optional<std::string> wrapped_pop_msg = msg_q.pop();
+    return wrapped_pop_msg.value_or("") == urgent_msg;
 }
 
 bool test_queue_threads() {
     MessageQueue<std::string> msg_q("testing");
-    std::string poped_msg;
+    std::optional<std::string> wrapped_pop_msg;
 
-    std::thread t1([&msg_q, &poped_msg](){
-        poped_msg = msg_q.pop(); //q is empty so it should wait untill a new val is inserted
+    std::thread t1([&msg_q, &wrapped_pop_msg](){
+        wrapped_pop_msg = msg_q.pop(); //q is empty so it should wait untill a new val is inserted
     });
 
     std::this_thread::sleep_for(std::chrono::seconds(3)); //wait 3 seconds before pushing a new message
     std::string msg = "this is a message";
     msg_q.push(msg);
     t1.join();
-    return poped_msg == msg;
+    return wrapped_pop_msg.value_or("") == msg;
 }
 
 void run_queue_tests() {

@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <optional>
 
 #include "test_listener.hpp"
 #include "listener/listener.hpp"
@@ -12,8 +13,8 @@ bool test_listener_push(){
     std::string cmd = "success";
     std::string user_input = device_id + ":" + cmd;
     listener.push_to_main_queue(user_input);
-    std::string poped_input = main_queue.pop();
-    return poped_input == user_input;
+    std::optional<std::string> wrapped_poped_input = main_queue.pop();
+    return wrapped_poped_input.value_or("") == user_input;
 }
 
 void run_listener_tests() {
