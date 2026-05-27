@@ -4,18 +4,6 @@
 #include <utility>
 #include <vector>
 
-//test includes
-#include "tests/test_queue.hpp"
-#include "tests/test_message.hpp"
-#include "tests/test_simple_encoder.hpp"
-#include "tests/test_dummy_device.hpp"
-#include "tests/test_device_factory.hpp"
-#include "tests/test_device_registry.hpp"
-#include "tests/test_server.hpp"
-#include "tests/test_feedback_listener.hpp"
-#include "tests/test_parser.hpp"
-#include "tests/test_listener.hpp"
-
 //program includes
 #include "queues/message_queue.hpp"
 #include "listener/listener.hpp"
@@ -26,21 +14,6 @@
 #include "message_handling/parser/parser.hpp"
 #include "common/message.hpp"
 #include "listener/feedback_listener.hpp"
-
-void run_tests() {
-    std::cout << "Smart Home Hub start testing:\n";
-    run_queue_tests();
-    run_message_tests();
-    run_simple_encoder_tests();
-    run_dummy_device_tests();
-    run_device_factory_tests();
-    run_device_registry_tests();
-    run_server_tests();
-    run_feedback_listener_tests();
-    run_parser_tests();
-    run_listener_tests();
-    std::cout << "Smart Home Hub end testing\n\n";
-}
 
 void worker(DeviceRegistry& device_registry, Server& server, const std::string& device_id) {
     MessageQueue<Message>* device_queue = device_registry.get_queue(device_id);
@@ -61,7 +34,6 @@ void worker(DeviceRegistry& device_registry, Server& server, const std::string& 
 }
 
 int main() {
-    run_tests();
     std::cout << "Smart Home Hub starting...\n";
     MessageQueue<std::string> main_queue("main");
     Listener listener(main_queue);

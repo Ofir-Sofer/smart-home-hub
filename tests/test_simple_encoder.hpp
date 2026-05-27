@@ -1,1 +1,0 @@
-void run_simple_encoder_tests();

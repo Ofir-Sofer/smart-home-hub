@@ -1,1 +1,0 @@
-void run_dummy_device_tests();

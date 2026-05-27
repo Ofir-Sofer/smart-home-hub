@@ -5,7 +5,6 @@
 #include <chrono>
 #include <optional>
 
-#include "test_queue.hpp"
 #include "queues/message_queue.hpp"
 #include "common/message.hpp"
 

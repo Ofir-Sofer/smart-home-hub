@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "test_parser.hpp"
 #include "message_handling/parser/parser.hpp"
 #include "queues/message_queue.hpp"
 #include "message_handling/encoders/simple_encoder.hpp"

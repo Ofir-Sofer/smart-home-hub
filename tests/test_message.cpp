@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 
-#include "test_message.hpp"
 #include "common/message.hpp"
 
 bool test_message() {

@@ -1,1 +1,0 @@
-void run_device_factory_tests();

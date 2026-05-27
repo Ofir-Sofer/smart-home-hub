@@ -1,13 +1,11 @@
 #include <string>
 #include <iostream>
 
-#include "test_feedback_listener.hpp"
 #include "listener/feedback_listener.hpp"
 #include "device_management/factory/device_factory.hpp"
 #include "device_management/registry/device_registry.hpp"
 #include "server/server.hpp"
 #include "common/device_result.hpp"
-#include "test_feedback_listener.hpp"
 
 
 bool test_feedback_listener_route_to_user() {

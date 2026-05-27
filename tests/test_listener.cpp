@@ -2,7 +2,6 @@
 #include <iostream>
 #include <optional>
 
-#include "test_listener.hpp"
 #include "listener/listener.hpp"
 #include "queues/message_queue.hpp"
 

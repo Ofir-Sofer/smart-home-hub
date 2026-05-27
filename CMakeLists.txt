@@ -16,11 +16,19 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(nlohmann_json)
 
-file(GLOB_RECURSE  SOURCES "src/*.cpp")
+file(GLOB_RECURSE SOURCES "src/*.cpp")
 if (BUILD_TESTS)
-    file(GLOB_RECURSE  TESTS "tests/*.cpp")
+    file(GLOB_RECURSE TESTS "tests/*.cpp")
 endif()
 
-add_executable(smart_home_hub main.cpp ${SOURCES} ${TESTS})
+# Main application (always built)
+add_executable(smart_home_hub main.cpp ${SOURCES})
 target_include_directories(smart_home_hub PRIVATE include)
 target_link_libraries(smart_home_hub PRIVATE nlohmann_json::nlohmann_json)
+
+# Test runner (only built when BUILD_TESTS=ON)
+if(BUILD_TESTS)
+    add_executable(smart_home_hub_tests ${SOURCES} ${TESTS})
+    target_include_directories(smart_home_hub_tests PRIVATE include)
+    target_link_libraries(smart_home_hub_tests PRIVATE nlohmann_json::nlohmann_json)
+endif()
