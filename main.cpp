@@ -3,6 +3,7 @@
 #include <thread>
 #include <utility>
 #include <vector>
+#include <csignal>
 
 //program includes
 #include "queues/message_queue.hpp"
@@ -33,9 +34,23 @@ void worker(DeviceRegistry& device_registry, Server& server, const std::string& 
     }
 }
 
+//handle ctrl+c
+std::atomic<bool> g_shutdown{false};
+MessageQueue<std::string>* g_main_queue = nullptr;
+void signal_handler(int signal) {
+    // cleanup code here- change g_shutdown to true
+    g_shutdown = true;
+    if (g_main_queue) {
+        g_main_queue->shutdown();
+    }
+    std::cout << "\nShutdown signal received, press Enter to exit...\n";
+}
+
 int main() {
     std::cout << "Smart Home Hub starting...\n";
+    std::signal(SIGINT, signal_handler);
     MessageQueue<std::string> main_queue("main");
+    g_main_queue = &main_queue;
     Listener listener(main_queue);
     std::string device_config_path = "config/devices.json";
     DeviceFactory device_factory(device_config_path);
@@ -54,10 +69,9 @@ int main() {
 
     // main loop
     std::string user_input;
-    while (std::getline(std::cin, user_input)) {
+    while (!g_shutdown && std::getline(std::cin, user_input)) {
         if (user_input == "SHUTDOWN!!!") {
-            main_queue.shutdown();
-            // this causes the main queue to return by default empty msg, which in turn causes the parser to returen shutdown
+            break;
         } else {
             listener.push_to_main_queue(user_input);
         }
@@ -76,6 +90,7 @@ int main() {
     }
 
     // shutdown sequence
+    main_queue.shutdown();// this causes the main queue to return by default empty msg, which in turn causes the parser to returen shutdown
     device_registry.shutdown_all_queues();
     // device queues are shut down, device threads will exit their loops and can be joined
     for (std::thread& th : device_threads) {
@@ -83,6 +98,7 @@ int main() {
             th.join();
         }
     }
+    std::cout << "program shutdown\n";
 
     return 0;
 }
