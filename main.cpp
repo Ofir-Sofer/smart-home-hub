@@ -51,7 +51,12 @@ int main() {
     std::signal(SIGINT, signal_handler);
     MessageQueue<std::string> main_queue("main");
     g_main_queue = &main_queue;
-    Listener listener(main_queue);
+    const char* tg_token = std::getenv("TELEGRAM_TOKEN");
+    if (!tg_token) {
+        std::cerr << "TELEGRAM_TOKEN environment variable not set\n";
+        return 1;
+    }
+    Listener listener(main_queue, tg_token);
     std::string device_config_path = "config/devices.json";
     DeviceFactory device_factory(device_config_path);
     DeviceRegistry device_registry(device_factory);
@@ -68,13 +73,10 @@ int main() {
     }
 
     // main loop
-    std::string user_input;
-    while (!g_shutdown && std::getline(std::cin, user_input)) {
-        if (user_input == "SHUTDOWN!!!") {
-            break;
-        } else {
-            listener.push_to_main_queue(user_input);
-        }
+    std::thread listener_thread([&listener]() {
+        listener.start();
+    });
+    while (true) {
         ParserStatus status = parser.process_message();
         if (status == ParserStatus::SHUTDOWN) {
             break;
@@ -90,7 +92,11 @@ int main() {
     }
 
     // shutdown sequence
-    main_queue.shutdown();// this causes the main queue to return by default empty msg, which in turn causes the parser to returen shutdown
+    listener.shutdown();
+    if (listener_thread.joinable()) {
+        listener_thread.join();
+    }
+    main_queue.shutdown();// ensure queue shutdown regardless of shutdown path
     device_registry.shutdown_all_queues();
     // device queues are shut down, device threads will exit their loops and can be joined
     for (std::thread& th : device_threads) {

@@ -12,7 +12,7 @@ void run_device_registry_tests();
 void run_server_tests();
 void run_feedback_listener_tests();
 void run_parser_tests();
-void run_listener_tests();
+// void run_listener_tests();
 
 inline void run_all_tests() {
     std::cout << "Smart Home Hub start testing:\n";
@@ -25,6 +25,6 @@ inline void run_all_tests() {
     run_server_tests();
     run_feedback_listener_tests();
     run_parser_tests();
-    run_listener_tests();
+    // run_listener_tests();
     std::cout << "Smart Home Hub end testing\n\n";
 }

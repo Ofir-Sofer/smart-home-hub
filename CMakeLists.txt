@@ -16,6 +16,18 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(nlohmann_json)
 
+FetchContent_Declare(
+    tgbot
+    GIT_REPOSITORY https://github.com/reo7sp/tgbot-cpp.git
+    GIT_TAG        v1.10
+)
+
+FetchContent_MakeAvailable(tgbot)
+
+find_package(OpenSSL REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(CURL REQUIRED)
+
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 if (BUILD_TESTS)
     file(GLOB_RECURSE TESTS "tests/*.cpp")
@@ -23,12 +35,26 @@ endif()
 
 # Main application (always built)
 add_executable(smart_home_hub main.cpp ${SOURCES})
-target_include_directories(smart_home_hub PRIVATE include)
-target_link_libraries(smart_home_hub PRIVATE nlohmann_json::nlohmann_json)
+target_include_directories(smart_home_hub PRIVATE include  ${tgbot_SOURCE_DIR}/include)
+target_link_libraries(smart_home_hub PRIVATE 
+    nlohmann_json::nlohmann_json 
+    TgBot
+    OpenSSL::SSL 
+    OpenSSL::Crypto
+    ${Boost_LIBRARIES}
+    CURL::libcurl
+)
 
 # Test runner (only built when BUILD_TESTS=ON)
 if(BUILD_TESTS)
     add_executable(smart_home_hub_tests ${SOURCES} ${TESTS})
-    target_include_directories(smart_home_hub_tests PRIVATE include)
-    target_link_libraries(smart_home_hub_tests PRIVATE nlohmann_json::nlohmann_json)
+    target_include_directories(smart_home_hub_tests PRIVATE include ${tgbot_SOURCE_DIR}/include)
+    target_link_libraries(smart_home_hub_tests PRIVATE 
+    nlohmann_json::nlohmann_json 
+    TgBot
+    OpenSSL::SSL 
+    OpenSSL::Crypto
+    ${Boost_LIBRARIES}
+    CURL::libcurl
+)
 endif()
