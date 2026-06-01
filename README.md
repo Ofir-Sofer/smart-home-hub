@@ -30,7 +30,8 @@ User (Telegram) ← Server ← FeedbackListener ←─────────�
 ### Threading Model
 
 ```
-Main Thread:   Listener → Main Queue → Parser → Server → Device Queues
+Listener Thread: Telegram polling → Main Queue
+Main Thread:     Main Queue → Parser → Server → Device Queues
 Device Thread (×N): Device Queue → Device → FeedbackListener → Server → User
 ```
 
@@ -38,9 +39,14 @@ Device Thread (×N): Device Queue → Device → FeedbackListener → Server →
 
 ### Prerequisites
 
+### Prerequisites
 - CMake 3.20+
 - GCC with C++17 support
-- Internet connection (nlohmann/json fetched automatically)
+- Install system dependencies:
+```bash
+  sudo apt install libssl-dev libboost-all-dev libcurl4-openssl-dev
+```
+- Internet connection (nlohmann/json and tgbot-cpp fetched automatically via CMake)
 
 ### Build
 
@@ -88,14 +94,15 @@ Devices are configured in `config/devices.json`:
 Authorized user IDs are stored in `config/authorized_users.json` (not tracked by git). Copy the example file and edit it with your real IDs:
 
 ```bash
-cp config/authorized_users_example.json config/authorized_users.json
+cp config/authorized_users.example.json config/authorized_users.json
 ```
 
 Then open `config/authorized_users.json` and replace the placeholder IDs with your actual user IDs.
 
 ## Roadmap
 
-- [ ] Telegram bot integration
+- [x] Telegram bot integration
+- [x] User authentication (authorized users whitelist)
 - [ ] Hailo8 AI encoder for natural language commands
 - [ ] Roborock vacuum integration
 - [ ] Tapo smart plug integration
