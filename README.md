@@ -83,6 +83,16 @@ Devices are configured in `config/devices.json`:
 }
 ```
 
+## Authorized Users Configuration
+
+Authorized user IDs are stored in `config/authorized_users.json` (not tracked by git). Copy the example file and edit it with your real IDs:
+
+```bash
+cp config/authorized_users_example.json config/authorized_users.json
+```
+
+Then open `config/authorized_users.json` and replace the placeholder IDs with your actual user IDs.
+
 ## Roadmap
 
 - [ ] Telegram bot integration

@@ -56,7 +56,8 @@ int main() {
         std::cerr << "TELEGRAM_TOKEN environment variable not set\n";
         return 1;
     }
-    Listener listener(main_queue, tg_token);
+    std::string authorized_users_path = "config/authorized_users.json";
+    Listener listener(main_queue, tg_token, authorized_users_path);
     std::string device_config_path = "config/devices.json";
     DeviceFactory device_factory(device_config_path);
     DeviceRegistry device_registry(device_factory);
