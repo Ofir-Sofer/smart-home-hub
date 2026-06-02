@@ -35,6 +35,11 @@ endif()
 
 # Main application (always built)
 add_executable(smart_home_hub main.cpp ${SOURCES})
+add_custom_target(run
+    COMMAND smart_home_hub
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    DEPENDS smart_home_hub
+)
 target_include_directories(smart_home_hub PRIVATE include  ${tgbot_SOURCE_DIR}/include)
 target_link_libraries(smart_home_hub PRIVATE 
     nlohmann_json::nlohmann_json 
