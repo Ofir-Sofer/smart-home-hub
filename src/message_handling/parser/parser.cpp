@@ -12,6 +12,7 @@ ParserStatus Parser::process_message() {
     std::optional<std::string> wrapped_user_input = m_main_queue.pop();
     if (wrapped_user_input.has_value()) {
         std::string user_input = wrapped_user_input.value();
+        std::cout << "User sent: " << user_input << "\n";
         if (user_input == "SHUTDOWN!!!") {
             return ParserStatus::SHUTDOWN;
         }
