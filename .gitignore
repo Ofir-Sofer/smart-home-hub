@@ -48,3 +48,7 @@ build/
 
 #authorized users list
 config/authorized_users.json
+
+#models folder
+models/*
+!models/.gitkeep
