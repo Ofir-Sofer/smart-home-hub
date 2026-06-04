@@ -29,7 +29,7 @@ DeviceFactory::DeviceFactory(const std::string& config_path) {
     }
 }
 
-IDevice* DeviceFactory::get_device(const std::string &device_id) {
+IDevice* DeviceFactory::get_device(const std::string &device_id) const {
     auto it = m_device_map.find(device_id);
     if (it != m_device_map.end()) {
         return it->second.get();
@@ -48,7 +48,7 @@ DeviceFactory::ConstructorMap DeviceFactory::register_constructors() {
     return device_constructors;
 }
 
-std::vector<std::string> DeviceFactory::get_device_id_list() {
+std::vector<std::string> DeviceFactory::get_device_id_list() const {
     std::vector<std::string> device_id_list;
     device_id_list.reserve(m_device_map.size());
     for (const auto& pair : m_device_map) {

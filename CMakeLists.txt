@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(smart_home_hub VERSION 0.1.0 LANGUAGES CXX)
+project(smart_home_hub VERSION 0.1.0 LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,7 +13,6 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/nlohmann/json
     GIT_TAG        v3.11.3
 )
-
 FetchContent_MakeAvailable(nlohmann_json)
 
 FetchContent_Declare(
@@ -21,9 +20,9 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/reo7sp/tgbot-cpp.git
     GIT_TAG        v1.10
 )
-
 FetchContent_MakeAvailable(tgbot)
 
+find_package(llama REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(CURL REQUIRED)
@@ -34,13 +33,14 @@ if (BUILD_TESTS)
 endif()
 
 # Main application (always built)
+add_compile_definitions(BOOST_BIND_GLOBAL_PLACEHOLDERS)
 add_executable(smart_home_hub main.cpp ${SOURCES})
 add_custom_target(run
     COMMAND smart_home_hub
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     DEPENDS smart_home_hub
 )
-target_include_directories(smart_home_hub PRIVATE include  ${tgbot_SOURCE_DIR}/include)
+target_include_directories(smart_home_hub PRIVATE include  ${tgbot_SOURCE_DIR}/include /usr/local/include)
 target_link_libraries(smart_home_hub PRIVATE 
     nlohmann_json::nlohmann_json 
     TgBot
@@ -48,12 +48,14 @@ target_link_libraries(smart_home_hub PRIVATE
     OpenSSL::Crypto
     ${Boost_LIBRARIES}
     CURL::libcurl
+    llama
+    ggml
 )
 
 # Test runner (only built when BUILD_TESTS=ON)
 if(BUILD_TESTS)
     add_executable(smart_home_hub_tests ${SOURCES} ${TESTS})
-    target_include_directories(smart_home_hub_tests PRIVATE include ${tgbot_SOURCE_DIR}/include)
+    target_include_directories(smart_home_hub_tests PRIVATE include ${tgbot_SOURCE_DIR}/include /usr/local/include)
     target_link_libraries(smart_home_hub_tests PRIVATE 
     nlohmann_json::nlohmann_json 
     TgBot
@@ -61,5 +63,7 @@ if(BUILD_TESTS)
     OpenSSL::Crypto
     ${Boost_LIBRARIES}
     CURL::libcurl
+    llama
+    ggml
 )
 endif()

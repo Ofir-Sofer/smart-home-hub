@@ -4,6 +4,8 @@
 #include <utility>
 #include <vector>
 #include <csignal>
+#include <nlohmann/json.hpp>
+#include <fstream>
 
 //program includes
 #include "queues/message_queue.hpp"
@@ -11,7 +13,9 @@
 #include "device_management/factory/device_factory.hpp"
 #include "device_management/registry/device_registry.hpp"
 #include "server/server.hpp"
+#include "message_handling/encoders/iencoder.hpp"
 #include "message_handling/encoders/simple_encoder.hpp"
+#include "message_handling/encoders/llama_encoder.hpp"
 #include "message_handling/parser/parser.hpp"
 #include "common/message.hpp"
 #include "listener/feedback_listener.hpp"
@@ -43,12 +47,13 @@ void signal_handler(int signal) {
     if (g_main_queue) {
         g_main_queue->shutdown();
     }
-    std::cout << "\nShutdown signal received, press Enter to exit...\n";
+    std::cout << "\nShutdown signal received\n";
 }
 
 int main() {
     std::cout << "Smart Home Hub starting...\n";
     std::signal(SIGINT, signal_handler);
+    std::string settings_path = "config/settings.json";
     MessageQueue<std::string> main_queue("main");
     g_main_queue = &main_queue;
     const char* tg_token = std::getenv("TELEGRAM_TOKEN");
@@ -62,8 +67,23 @@ int main() {
     DeviceFactory device_factory(device_config_path);
     DeviceRegistry device_registry(device_factory);
     Server server(device_registry);
-    SimpleEncoder encoder;
-    Parser parser(main_queue, encoder, server);
+    std::unique_ptr<IEncoder> encoder;
+    {
+        std::ifstream file(settings_path);
+        if (!file.is_open()) {
+            throw std::runtime_error("Could not open: " + settings_path);
+        }
+        nlohmann::json j;
+        file >> j;
+        std::string encoder_type = j["encoder"];
+        if (encoder_type == "llama") {
+            std::string model_path = j["model_path"];
+            encoder = std::make_unique<LlamaEncoder>(device_registry, model_path);
+        } else {
+            encoder = std::make_unique<SimpleEncoder>();
+        }
+    }
+    Parser parser(main_queue, *encoder, server);
 
     // spawn device threads
     std::vector<std::thread> device_threads;
@@ -77,6 +97,7 @@ int main() {
     std::thread listener_thread([&listener]() {
         listener.start();
     });
+    std::cout << "Smart Home Hub ready for input\n";
     while (true) {
         ParserStatus status = parser.process_message();
         if (status == ParserStatus::SHUTDOWN) {

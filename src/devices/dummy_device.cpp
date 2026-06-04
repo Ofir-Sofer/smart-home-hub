@@ -10,3 +10,7 @@ DeviceResult DummyDevice::process_command(const Message& input_msg) {
         return {DeviceStatus::AWAITING_CONFIRMATION, "waiting for response"};
     }
 }
+
+std::vector<std::string> DummyDevice::get_commands() const {
+    return {"success", "fail", "waiting for response"};
+}

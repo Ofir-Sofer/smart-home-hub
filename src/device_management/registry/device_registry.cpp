@@ -6,13 +6,13 @@
 
 DeviceRegistry::DeviceRegistry(DeviceFactory& factory) 
     : m_factory(factory) {
-    std::vector<std::string> device_id_list = m_factory.get_device_id_list();
-    for (const auto& id : device_id_list) {
+    m_device_id_list = m_factory.get_device_id_list();
+    for (const auto& id : m_device_id_list) {
         m_device_queues.emplace(id,id);
     }
 }
 
-IDevice* DeviceRegistry::get_device(const std::string& device_id) {
+IDevice* DeviceRegistry::get_device(const std::string& device_id) const {
     return m_factory.get_device(device_id);
 }
 
@@ -22,6 +22,10 @@ MessageQueue<Message>* DeviceRegistry::get_queue(const std::string &device_id) {
         return &(it->second);
     }
     return nullptr;
+}
+
+std::vector<std::string> DeviceRegistry::get_device_id_list() const {
+    return m_device_id_list;
 }
 
 void DeviceRegistry::shutdown_all_queues() {
