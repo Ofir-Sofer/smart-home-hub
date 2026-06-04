@@ -1,7 +1,6 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include <iostream>
 
 #include "message_handling/encoders/llama_encoder.hpp"
 #include "device_management/registry/device_registry.hpp"
@@ -49,12 +48,14 @@ std::string LlamaEncoder::build_prompt(const std::string& user_input) const {
         prompt = prompt + per_device_commands;
     }
     prompt.erase(prompt.size() - 2); //remove trailing space and comma
-    prompt = prompt + ". User said: " + user_input + ". Respond with ONLY device_id:command, nothing else. device_id:command";
+    prompt = prompt + ". User said: " + user_input + ". Respond ONLY with device_id:command or device_id:command:value format. Example: mini_inverter:set_mode:cold";
     prompt = "<|user|>\n" + prompt + "<|end|>\n<|assistant|>\n";
     return prompt;
 }
 
 Message LlamaEncoder:: encode(const std::string &input) const {
+    llama_memory_t mem = llama_get_memory(m_ctx);
+    llama_memory_clear(mem, false);
     std::string prompt = build_prompt(input);
     int n_predict = 32;
     //tokenize
@@ -120,15 +121,16 @@ Message LlamaEncoder:: encode(const std::string &input) const {
 }
 
 static void output_cleanup(std::string& output) {
-    // trim leading whitespace
     output.erase(0, output.find_first_not_of(" \t\n\r"));
-
-    // strip <|assistant|> prefix if present
     const std::string assistant_prefix = "<|assistant|>";
     if (output.substr(0, assistant_prefix.size()) == assistant_prefix) {
         output.erase(0, assistant_prefix.size());
     }
-
-    // trim again after stripping prefix
     output.erase(0, output.find_first_not_of(" \t\n\r"));
+    // keep only first line
+    auto newline = output.find('\n');
+    if (newline != std::string::npos) {
+        output = output.substr(0, newline);
+    }
+    output.erase(output.find_last_not_of(" \t\n\r") + 1);
 }

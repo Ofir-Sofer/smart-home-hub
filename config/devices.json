@@ -3,6 +3,10 @@
         {
             "device_id": "dummy_test",
             "device_type": "dummy_device"
+        },
+        {
+            "device_id": "mini_inverter",
+            "device_type": "tadiran"
         }
     ]
 }
