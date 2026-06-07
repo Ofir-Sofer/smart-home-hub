@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "devices/tadiran.hpp"
 #include "common/message.hpp"
@@ -17,13 +19,31 @@ Tadiran::Tadiran(const std::string &device_id)
 :IDevice(device_id) {
     std::string settings_path = "config/tadiran_config.json";
     std::ifstream file(settings_path);
-        if (!file.is_open()) {
-            throw std::runtime_error("Could not open: " + settings_path);
-        }
-        nlohmann::json j;
-        file >> j;
-        m_bridge_ip = j["bridge_ip"];
-        m_bridge_port = j["port"];
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open: " + settings_path);
+    }
+    nlohmann::json j;
+    file >> j;
+    m_bridge_ip = j["bridge_ip"];
+    m_bridge_port = j["port"];
+
+    //run python bridge
+    m_bridge_pid = fork();
+    if (m_bridge_pid == 0) {
+        // we are the child — run Python
+        execl("/usr/bin/python3", "python3", "scripts/tadiran_bridge.py", nullptr);
+    } else if (m_bridge_pid > 0) {
+        // we are the parent — wait for bridge to start
+        sleep(1);
+    } else {
+        // fork failed
+        throw std::runtime_error("Failed to fork bridge process");
+    }
+}
+
+Tadiran::~Tadiran() {
+    kill(m_bridge_pid, SIGTERM);
+    waitpid(m_bridge_pid, nullptr, 0);
 }
 
 DeviceResult Tadiran::process_command(const Message &input_msg) {
