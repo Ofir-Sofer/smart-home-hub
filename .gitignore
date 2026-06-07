@@ -53,3 +53,9 @@ config/tadiran_config.json
 #models folder
 models/*
 !models/.gitkeep
+
+#hailo apps
+hailo-apps/
+
+#log files
+*.log

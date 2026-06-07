@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
+#include <tgbot/tgbot.h>
 
 #include "listener/listener.hpp"
 
@@ -29,7 +30,19 @@ void Listener::start() {
     // register callback ONCE before loop
     m_bot.getEvents().onAnyMessage([&](TgBot::Message::Ptr message) {
         if(is_authorized(message->chat->id)) {
-            push_to_main_queue(message->text);
+            if (message->voice) {
+                // handle voice message
+                std::string file_id = message->voice->fileId;
+                TgBot::File::Ptr file_info = m_bot.getApi().getFile(file_id);
+                std::string file_content = m_bot.getApi().downloadFile(file_info->filePath);
+                std::string file_path = "/tmp/smart_home_hub/audio/" + file_id + ".ogg";
+                std::ofstream file(file_path, std::ios::binary);
+                file.write(file_content.c_str(), file_content.size());
+                file.close();
+                push_to_main_queue("voice_msg:" + file_path);
+            } else {
+                push_to_main_queue(message->text);
+            }
         } else {
             m_bot.getApi().sendMessage(message->chat->id, "This is a private bot.");
         }
