@@ -6,6 +6,7 @@
 #include <csignal>
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <filesystem>
 
 //program includes
 #include "queues/message_queue.hpp"
@@ -52,6 +53,7 @@ void signal_handler(int signal) {
 
 int main() {
     std::cout << "Smart Home Hub starting...\n";
+    std::filesystem::create_directories("/tmp/smart_home_hub/audio");
     std::signal(SIGINT, signal_handler);
     std::string settings_path = "config/settings.json";
     MessageQueue<std::string> main_queue("main");
@@ -126,6 +128,7 @@ int main() {
             th.join();
         }
     }
+    // std::filesystem::remove_all("/tmp/smart_home_hub"); return after testing is done
     std::cout << "program shutdown\n";
 
     return 0;

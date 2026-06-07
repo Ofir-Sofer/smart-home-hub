@@ -7,7 +7,7 @@
 #include "common/message.hpp"
 
 Message SimpleEncoder:: encode(const std::string &input) const { 
-    size_t split_ind = input.find(':') ;
+    size_t split_ind = input.find(':');
     if (split_ind == std::string::npos) {
         throw std::runtime_error("message has the wrong format");
     }
