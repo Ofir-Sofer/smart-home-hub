@@ -1,16 +1,17 @@
 # Smart Home Hub
 
-A multithreaded C++ smart home hub running on Raspberry Pi 5 with Hailo8 AI HAT. Controls home devices via a Telegram bot interface, with local LLM-based natural language command processing running fully on-device.
+A multithreaded C++ smart home hub running on Raspberry Pi 5 with Hailo8 AI HAT. Controls home devices via a Telegram bot interface, with local LLM-based natural language command processing and Hailo8-accelerated speech recognition — fully on-device, no cloud dependency.
 
 ## Features
 
 - **Multithreaded architecture** — per-device threads with independent message queues
-- **Telegram bot interface** — send commands to your home devices via chat
+- **Telegram bot interface** — send text or voice messages to control your home devices
+- **Voice commands** — Hailo8 AI HAT runs OpenAI Whisper for on-device speech-to-text
 - **Swappable AI encoders** — pluggable encoder architecture (Strategy Pattern) supports rule-based (`SimpleEncoder`) and local LLM (`LlamaEncoder` via Phi-3-mini/llama.cpp). No cloud dependency.
 - **Authorized users** — only whitelisted Telegram user IDs can send commands
 - **Extensible device system** — add new devices via JSON config without recompiling
-- **Python bridge for IoT devices** — lightweight Python bridges handle device-specific protocols (Tuya, etc.)
-- **Graceful shutdown** — clean thread teardown on exit
+- **Python bridges for IoT devices** — lightweight Python bridges handle device-specific protocols (Tuya, etc.)
+- **Graceful shutdown** — clean thread and process teardown on exit
 
 ## Architecture
 
@@ -20,6 +21,14 @@ The system is built around a producer-consumer pipeline:
 User (Telegram) → Listener → Main Queue → Parser → Server → Device Queue → Device Thread
                                                                                     ↓
 User (Telegram) ← Server ← FeedbackListener ←────────────────────────────── Device
+```
+
+Voice command flow:
+```
+Voice message → Listener downloads .ogg → pushes "voice_msg:/tmp/path"
+→ Parser converts .ogg → .wav (ffmpeg)
+→ hailo_speech_to_text.py runs Whisper on Hailo8
+→ transcribed text → LlamaEncoder → device command
 ```
 
 For devices using a Python bridge:
@@ -48,12 +57,22 @@ Device Thread (×N): Device Queue → Device → FeedbackListener → Server →
 
 #### System dependencies
 ```bash
-sudo apt install -y git cmake build-essential libssl-dev libboost-all-dev libcurl4-openssl-dev
+sudo apt install -y git cmake build-essential libssl-dev libboost-all-dev libcurl4-openssl-dev ffmpeg libportaudio2
 ```
 
-#### Python dependencies (required for device bridges)
+#### Python dependencies (required for device bridges and voice commands)
 ```bash
 pip3 install tinytuya --break-system-packages
+```
+
+#### hailo-apps (required for voice commands via Hailo8 Whisper)
+```bash
+# Clone inside the smart-home-hub project root directory
+git clone https://github.com/hailo-ai/hailo-apps.git hailo-apps
+cd hailo-apps
+sudo pip3 install -e ".[speech-rec]" --break-system-packages
+sudo mkdir -p /usr/local/hailo && sudo chmod 777 /usr/local/hailo
+cd ..
 ```
 
 #### llama.cpp (required for LlamaEncoder)
@@ -77,6 +96,7 @@ sudo mkdir -p /usr/local/lib/cmake/ggml
 sudo cp build/ggml/ggml-config.cmake /usr/local/lib/cmake/ggml/
 sudo cp build/ggml/ggml-version.cmake /usr/local/lib/cmake/ggml/
 sudo ldconfig
+cd ..
 ```
 
 #### Model file
@@ -109,21 +129,11 @@ cmake --build build
 
 ### Run
 
-Start device bridges first, then the hub:
-
 ```bash
-# Terminal 1 — start Tadiran bridge (if using Tadiran AC)
-python3 scripts/tadiran_bridge.py
-
-# Terminal 2 — start the hub
 ./build/smart_home_hub
 ```
 
-Or use the provided start script:
-
-```bash
-./start.sh
-```
+The Tadiran bridge starts and stops automatically with the hub.
 
 ### Run tests
 
@@ -133,7 +143,7 @@ Or use the provided start script:
 
 ### Commands
 
-With `LlamaEncoder` — send natural language commands via Telegram:
+With `LlamaEncoder` — send natural language text or voice messages via Telegram:
 
 ```
 turn on the ac
@@ -221,9 +231,10 @@ To find your Telegram user ID, send any message to your bot and check the termin
 - [x] User authentication (authorized users whitelist)
 - [x] Local LLM encoder (Phi-3-mini via llama.cpp)
 - [x] Tadiran AC integration (local Tuya protocol via Python bridge)
-- [ ] Roborock vacuum integration (pending local API support)
+- [x] Voice command support (Hailo8 Whisper speech-to-text)
+- [ ] Hebrew language support for voice and text commands
+- [ ] Roborock vacuum integration (pending local API support for S8 MaxV Ultra)
 - [ ] Tapo camera integration (person detection, voice commands, recording control)
 - [ ] Hailo8 vision pipeline — person detection via Tapo camera feed
 - [ ] Eco router integration
-- [ ] Voice command support via Telegram voice messages
 - [ ] Persistent logging
