@@ -48,7 +48,9 @@ std::string LlamaEncoder::build_prompt(const std::string& user_input) const {
         prompt = prompt + per_device_commands;
     }
     prompt.erase(prompt.size() - 2); //remove trailing space and comma
-    prompt = prompt + ". User said: " + user_input + ". Respond ONLY with device_id:command or device_id:command:value format. Example: mini_inverter:set_mode:cold";
+    prompt = prompt + ". User said: " + user_input + ". Respond ONLY with device_id:command or \
+        device_id:command:value format. Example: mini_inverter:set_mode:cold.\
+        If the user's request does not clearly match any device or command, respond with exactly: UNKNOWN";
     prompt = "<|user|>\n" + prompt + "<|end|>\n<|assistant|>\n";
     return prompt;
 }
@@ -114,8 +116,13 @@ Message LlamaEncoder:: encode(const std::string &input) const {
     }
     
     output_cleanup(output);
-
+    
     llama_sampler_free(sampler);
+    
+    if (output == "UNKNOWN") {
+        throw std::runtime_error("No matching device found for input");
+    }
+
     SimpleEncoder simple_encoder;
     return simple_encoder.encode(output);
 }
