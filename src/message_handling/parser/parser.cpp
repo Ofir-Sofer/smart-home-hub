@@ -9,19 +9,21 @@
 #include "server/server.hpp"
 #include "common/message.hpp"
 
-ParserStatus Parser::process_message() {
-    std::optional<std::string> wrapped_user_input = m_main_queue.pop();
-    if (wrapped_user_input.has_value()) {
-        std::string user_input = wrapped_user_input.value();
-        std::cout << "User sent: " << user_input << "\n";
-        if (user_input == "SHUTDOWN!!!") {
-            return ParserStatus::SHUTDOWN;
+ParserResult Parser::process_message() {
+    std::optional<RawMessage> wrapped_raw_msg = m_main_queue.pop();
+    if (wrapped_raw_msg.has_value()) {
+        RawMessage raw_msg = wrapped_raw_msg.value();
+        std::string user_input = raw_msg.m_raw_input;
+        std::cout << "User sent: " << raw_msg.m_raw_input << "\n";
+        if (raw_msg.m_raw_input == "SHUTDOWN!!!") {
+            ParserResult parse_res = {ParserStatus::SHUTDOWN, raw_msg.m_user_id};
+            return parse_res;
         } else {
             std::string voice_prefix = "voice_msg:";
             size_t prefix_length = voice_prefix.length();
-            std::string user_prefix = user_input.substr(0,prefix_length);
+            std::string user_prefix = raw_msg.m_raw_input.substr(0,prefix_length);
             if (user_prefix == voice_prefix) {
-                std::string file_path = user_input.substr(prefix_length);
+                std::string file_path = raw_msg.m_raw_input.substr(prefix_length);
                 time_t now = time(nullptr);
                 std::string target_wav = "/tmp/smart_home_hub/audio/voice_" + std::to_string(now) + ".wav";
                 std::string convert_cmd = "ffmpeg -i " + file_path + " " + target_wav + " 2>/dev/null";
@@ -36,25 +38,29 @@ ParserStatus Parser::process_message() {
                 }
                 pclose(stt_pipe);
                 result.erase(result.find_last_not_of(" \t\n\r") + 1);
-                user_input = result;
+                raw_msg.m_raw_input = result;
                 std::remove(file_path.c_str());
                 std::remove(target_wav.c_str());
             }
         }
         try {
-            Message msg = m_encoder.encode(user_input);
+            Message msg = m_encoder.encode(raw_msg.m_raw_input, raw_msg.m_user_id);
             if (m_server.push_to_device_queue(msg) == ServerStatus::SUCCESS) {
-                return ParserStatus::SUCCESS;
+                ParserResult parse_res = {ParserStatus::SUCCESS, raw_msg.m_user_id};
+                return parse_res;
             } else {
-                return ParserStatus::ROUTING_ERROR;
+                ParserResult parse_res = {ParserStatus::ROUTING_ERROR, raw_msg.m_user_id};
+                return parse_res;
             }
         }
         catch(const std::runtime_error& e) {
             std::cerr << "Encode error: " << e.what() << "\n";
-            return ParserStatus::ENCODE_ERROR;
+            ParserResult parse_res = {ParserStatus::ENCODE_ERROR, raw_msg.m_user_id};
+            return parse_res;
         }
     } else {
-        //kill program
-        return ParserStatus::SHUTDOWN;
+        //if main queue has an empty msg this signals - kill program
+        ParserResult parse_res = {ParserStatus::SHUTDOWN, 0};
+            return parse_res;
     }
 }

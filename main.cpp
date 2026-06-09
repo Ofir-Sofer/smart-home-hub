@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <filesystem>
+#include <tgbot/tgbot.h>
 
 //program includes
 #include "queues/message_queue.hpp"
@@ -21,27 +22,27 @@
 #include "common/message.hpp"
 #include "listener/feedback_listener.hpp"
 
-void worker(DeviceRegistry& device_registry, Server& server, const std::string& device_id) {
+void worker(DeviceRegistry& device_registry, const std::string& device_id, TgBot::Bot& bot) {
     MessageQueue<Message>* device_queue = device_registry.get_queue(device_id);
     IDevice* device = device_registry.get_device(device_id);
     if (!device_queue || !device) {
         std::cerr << "Device not found: " << device_id << "\n";
         return;
     }
-    FeedbackListener feedback_listener(server);
+    FeedbackListener feedback_listener(bot);
     while (true) {
         std::optional<Message> wrapped_msg = device_queue->pop();
         if (!wrapped_msg.has_value()) {
             break;
         }
         DeviceResult res = device->process_command(wrapped_msg.value());
-        feedback_listener.forward_to_user(res, wrapped_msg.value().m_user_id, device_id);
+        feedback_listener.forward_to_user(res, wrapped_msg.value().m_user_id, device_id, wrapped_msg.value());
     }
 }
 
 //handle ctrl+c
 std::atomic<bool> g_shutdown{false};
-MessageQueue<std::string>* g_main_queue = nullptr;
+MessageQueue<RawMessage>* g_main_queue = nullptr;
 void signal_handler(int signal) {
     // cleanup code here- change g_shutdown to true
     g_shutdown = true;
@@ -56,15 +57,16 @@ int main() {
     std::filesystem::create_directories("/tmp/smart_home_hub/audio");
     std::signal(SIGINT, signal_handler);
     std::string settings_path = "config/settings.json";
-    MessageQueue<std::string> main_queue("main");
+    MessageQueue<RawMessage> main_queue("main");
     g_main_queue = &main_queue;
     const char* tg_token = std::getenv("TELEGRAM_TOKEN");
     if (!tg_token) {
         std::cerr << "TELEGRAM_TOKEN environment variable not set\n";
         return 1;
     }
+    TgBot::Bot telegram_bot(tg_token);
     std::string authorized_users_path = "config/authorized_users.json";
-    Listener listener(main_queue, tg_token, authorized_users_path);
+    Listener listener(main_queue, telegram_bot, authorized_users_path);
     std::string device_config_path = "config/devices.json";
     DeviceFactory device_factory(device_config_path);
     DeviceRegistry device_registry(device_factory);
@@ -91,7 +93,7 @@ int main() {
     std::vector<std::thread> device_threads;
     std::vector<std::string> device_id_list = device_factory.get_device_id_list();
     for (const std::string& id : device_id_list) {
-        std::thread new_thread(worker,std::ref(device_registry), std::ref(server), id);
+        std::thread new_thread(worker,std::ref(device_registry), id, std::ref(telegram_bot));
         device_threads.push_back(std::move(new_thread));
     }
 
@@ -101,15 +103,15 @@ int main() {
     });
     std::cout << "Smart Home Hub ready for input\n";
     while (true) {
-        ParserStatus status = parser.process_message();
-        if (status == ParserStatus::SHUTDOWN) {
+        ParserResult res = parser.process_message();
+        if (res.m_status == ParserStatus::SHUTDOWN) {
             break;
-        } else if (status == ParserStatus::ROUTING_ERROR) {
+        } else if (res.m_status == ParserStatus::ROUTING_ERROR) {
+            telegram_bot.getApi().sendMessage(res.m_user_id, "device wasnt found.");
             std::cout << "device wasnt found\n";
-            // TODO use feedback listener to notify user
-        } else if (status == ParserStatus::ENCODE_ERROR) {
+        } else if (res.m_status == ParserStatus::ENCODE_ERROR) {
+            telegram_bot.getApi().sendMessage(res.m_user_id, "there was an issue with user message.");
             std::cout << "there was an issue with user message\n";
-            // TODO use feedback listener to notify user
         } else {
             std::cout << "message pushed successfully\n";
         }

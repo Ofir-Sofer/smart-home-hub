@@ -1,24 +1,21 @@
 #pragma once
 
 #include <string>
+#include <tgbot/tgbot.h>
 
-#include "server/server.hpp"
 #include "common/device_result.hpp"
+#include "common/message.hpp"
 
-// FeedbackListener is responsible for handling all messages that flow from devices back to the user.
-// Currently it forwards DeviceResult directly to the Server, but is designed to grow into a richer layer.
-// Future responsibilities may include:
-// - Formatting device responses for Telegram
-// - Handling AWAITING_CONFIRMATION responses (pausing queue, presenting options to user)
-// - Logging device feedback for debugging and analytics
-// - Filtering or prioritizing feedback messages
+// FeedbackListener now requires a live TgBot::Bot instance with a valid token.
+// Telegram API calls cannot be unit tested without a real connection.
+// Verified manually end-to-end via Telegram commands.
 class FeedbackListener {
 public:
-    FeedbackListener(Server& server)
-    :m_server(server){};
+    FeedbackListener(TgBot::Bot& bot)
+    :m_bot(bot){};
     
-    void forward_to_user(const DeviceResult& device_res, const std::string& user_id, const std::string& device_id);
+    void forward_to_user(const DeviceResult& device_res, int64_t user_id, const std::string& device_id, const Message& msg);
 
 private:
-    Server& m_server;
+    TgBot::Bot& m_bot;
 };

@@ -10,7 +10,6 @@ void run_dummy_device_tests();
 void run_device_factory_tests();
 void run_device_registry_tests();
 void run_server_tests();
-void run_feedback_listener_tests();
 void run_parser_tests();
 // Note: Listener is tested via integration only.
 // Unit testing requires a live Telegram bot connection.
@@ -25,7 +24,6 @@ inline void run_all_tests() {
     run_device_factory_tests();
     run_device_registry_tests();
     run_server_tests();
-    run_feedback_listener_tests();
     run_parser_tests();
     std::cout << "Smart Home Hub end testing\n\n";
 }

@@ -4,13 +4,12 @@
 #include <fstream>
 #include <iostream>
 #include <tgbot/tgbot.h>
+#include <cstdint>
 
 #include "listener/listener.hpp"
 
-Listener::Listener(MessageQueue<std::string>& main_queue,
-    const std::string& token,
-    const std::string& authorized_users_path)
-    :m_main_queue(main_queue), m_bot(token){
+Listener::Listener(MessageQueue<RawMessage>& main_queue, TgBot::Bot& bot, const std::string& authorized_users_path)
+    :m_main_queue(main_queue), m_bot(bot){
         std::ifstream file(authorized_users_path);
         if (!file.is_open()) {
             throw std::runtime_error("Could not open: " + authorized_users_path);
@@ -22,14 +21,15 @@ Listener::Listener(MessageQueue<std::string>& main_queue,
         }
     }
 
-void Listener::push_to_main_queue(const std::string &user_input) {
+void Listener::push_to_main_queue(const RawMessage& user_input) {
     m_main_queue.push(user_input);
 }
 
 void Listener::start() {
     // register callback ONCE before loop
     m_bot.getEvents().onAnyMessage([&](TgBot::Message::Ptr message) {
-        if(is_authorized(message->chat->id)) {
+        int64_t user_id = message->chat->id;
+        if(is_authorized(user_id)) {
             if (message->voice) {
                 // handle voice message
                 std::string file_id = message->voice->fileId;
@@ -39,9 +39,11 @@ void Listener::start() {
                 std::ofstream file(file_path, std::ios::binary);
                 file.write(file_content.c_str(), file_content.size());
                 file.close();
-                push_to_main_queue("voice_msg:" + file_path);
+                RawMessage raw_msg = {"voice_msg:" + file_path, user_id};
+                push_to_main_queue(raw_msg);
             } else {
-                push_to_main_queue(message->text);
+                RawMessage raw_msg = {message->text, user_id};
+                push_to_main_queue(raw_msg);
             }
         } else {
             m_bot.getApi().sendMessage(message->chat->id, "This is a private bot.");
@@ -63,9 +65,6 @@ void Listener::shutdown() {
     m_shutdown = true;
 }
 
-bool Listener::is_authorized(int64_t user_id) {
-    if (m_authorized_users.find(user_id) != m_authorized_users.end()) {
-        return true;
-    }
-    return false;
+bool Listener::is_authorized(int64_t user_id) const{
+    return m_authorized_users.find(user_id) != m_authorized_users.end();
 }

@@ -16,7 +16,7 @@ bool test_server_push_to_queue() {
     DeviceRegistry device_registry(device_factory);
     Server server(device_registry);
     std::string cmd = "turn on";
-    std::string user_id = "user_123";
+    int64_t user_id = 0;
     Direction target = Direction::TO_DEVICE;
     Message msg = {device_id, cmd, user_id, target};
     server.push_to_device_queue(msg);
@@ -36,7 +36,7 @@ bool test_server_invalid_device() {
     DeviceRegistry device_registry(device_factory);
     Server server(device_registry);
     std::string cmd = "turn on";
-    std::string user_id = "user_123";
+    int64_t user_id = 0;
     Direction target = Direction::TO_DEVICE;
     Message msg = {invalid_device_id, cmd, user_id, target};
     server.push_to_device_queue(msg);
@@ -44,24 +44,9 @@ bool test_server_invalid_device() {
     return msg_q == nullptr;
 }
 
-bool test_server_route_to_user(){
-    std::string conf_path = "config/test_devices.json";
-    DeviceFactory device_factory(conf_path);
-    std::string device_id = "dummy_test";
-    DeviceRegistry device_registry(device_factory);
-    Server server(device_registry);
-    DeviceResult device_res = {DeviceStatus::SUCCESS, 1};
-    std::string user_id = "user123";
-    server.route_to_user(device_res, user_id, device_id);
-    // route_to_user currently prints to console - no return value to verify
-    // test just ensures it doesn't crash
-    return true;
-}
-
 void run_server_tests() {
     std::cout << "START SERVER TESTS:\n";
     std::cout << "test_server_push_to_queue: " << (test_server_push_to_queue() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "test_server_invalid_device: " << (test_server_invalid_device() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
-    std::cout << "test_server_route_to_user: " << (test_server_route_to_user() ? "PASS" : "!!!!!!!!!!FAIL!!!!!!!!!!") << "\n";
     std::cout << "END SERVER TESTS\n";
 }

@@ -55,7 +55,7 @@ std::string LlamaEncoder::build_prompt(const std::string& user_input) const {
     return prompt;
 }
 
-Message LlamaEncoder:: encode(const std::string &input) const {
+Message LlamaEncoder:: encode(const std::string &input, int64_t user_id) const {
     llama_memory_t mem = llama_get_memory(m_ctx);
     llama_memory_clear(mem, false);
     std::string prompt = build_prompt(input);
@@ -124,7 +124,7 @@ Message LlamaEncoder:: encode(const std::string &input) const {
     }
 
     SimpleEncoder simple_encoder;
-    return simple_encoder.encode(output);
+    return simple_encoder.encode(output, user_id);
 }
 
 static void output_cleanup(std::string& output) {
