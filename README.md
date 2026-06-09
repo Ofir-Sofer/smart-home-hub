@@ -11,6 +11,7 @@ A multithreaded C++ smart home hub running on Raspberry Pi 5 with Hailo8 AI HAT.
 - **Authorized users** — only whitelisted Telegram user IDs can send commands
 - **Extensible device system** — add new devices via JSON config without recompiling
 - **Python bridges for IoT devices** — lightweight Python bridges handle device-specific protocols (Tuya, etc.)
+- **User feedback** — every command gets a Telegram response: confirmation on receipt, and device result (success/failure with command details) on completion
 - **Graceful shutdown** — clean thread and process teardown on exit
 
 ## Architecture
@@ -20,7 +21,7 @@ The system is built around a producer-consumer pipeline:
 ```
 User (Telegram) → Listener → Main Queue → Parser → Server → Device Queue → Device Thread
                                                                                     ↓
-User (Telegram) ← Server ← FeedbackListener ←────────────────────────────── Device
+User (Telegram) ←──────── FeedbackListener ←─────────────────────────────── Device
 ```
 
 Voice command flow:
@@ -48,7 +49,7 @@ Device Thread → TadiranDevice → [TCP socket] → tadiran_bridge.py → [Tuya
 ```
 Listener Thread:    Telegram polling → Main Queue
 Main Thread:        Main Queue → Parser → Server → Device Queues
-Device Thread (×N): Device Queue → Device → FeedbackListener → Server → User
+Device Thread (×N): Device Queue → Device → FeedbackListener → User
 ```
 
 ## Building
