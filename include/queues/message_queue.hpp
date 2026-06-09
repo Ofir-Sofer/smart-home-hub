@@ -15,12 +15,14 @@ public:
 
     void push(const T& message) {
         std::unique_lock<std::mutex> lock(m_mutex);
+        if (m_shutdown) return;
         m_queue.push_back(message);
         m_convar.notify_one();
     }
 
     void push_urgent(const T& message) {
         std::unique_lock<std::mutex> lock(m_mutex);
+        if (m_shutdown) return;
         m_queue.push_front(message);
         m_convar.notify_one();
     }
@@ -42,7 +44,9 @@ public:
     }
 
     void shutdown() {
+        std::unique_lock<std::mutex> lock(m_mutex);
         m_shutdown = true;
+        m_queue.clear();
         m_convar.notify_all(); // wake up ALL waiting threads
     }
 
