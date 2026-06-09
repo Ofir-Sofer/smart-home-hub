@@ -9,7 +9,12 @@
 class LlamaEncoder : public IEncoder {
 public:
     LlamaEncoder(DeviceRegistry& registry, const std::string& model_path);
+    
     ~LlamaEncoder();
+    LlamaEncoder(const LlamaEncoder&) = delete;
+    LlamaEncoder& operator=(const LlamaEncoder&) = delete;
+    LlamaEncoder(LlamaEncoder&&) = delete;
+    LlamaEncoder& operator=(LlamaEncoder&&) = delete;
 
     Message encode(const std::string& input) const override;
 
