@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
 
 #include "message_handling/encoders/iencoder.hpp"
 #include "device_management/registry/device_registry.hpp"
@@ -16,7 +17,7 @@ public:
     LlamaEncoder(LlamaEncoder&&) = delete;
     LlamaEncoder& operator=(LlamaEncoder&&) = delete;
 
-    Message encode(const std::string& input) const override;
+    Message encode(const std::string& input, int64_t user_id) const override;
 
 private:
     DeviceRegistry& m_registry;

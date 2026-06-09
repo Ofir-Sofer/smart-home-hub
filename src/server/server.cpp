@@ -25,9 +25,9 @@ ServerStatus Server::push_urgent_to_device_queue(const Message& msg) {
     return ServerStatus::DEVICE_NOT_FOUND;
 }
 
-void Server::route_to_user(const DeviceResult &result, const std::string &user_id, const std::string& device_id) {
-    std::visit([&device_id] (const auto& res_data) {
-        std::cout<< "user data: " << res_data << ", device- " << device_id << "\n";
-    }, result.m_data);
-    // TODO - user_id will be used to route the message to the correct user
-}
+// void Server::route_to_user(const DeviceResult& result, int64_t user_id, const std::string& device_id) {
+//     std::visit([&device_id] (const auto& res_data) {
+//         std::cout<< "user data: " << res_data << ", device- " << device_id << "\n";
+//     }, result.m_data);
+//     // TODO - user_id will be used to route the message to the correct user
+// }

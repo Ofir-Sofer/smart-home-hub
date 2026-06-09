@@ -9,9 +9,9 @@ bool test_simple_encoder() {
     std::string device = "washer";
     std::string cmd = "turn on";
     std::string user_msg = device + ":" + cmd;
-    std::string user_id = "def_user";
+    int64_t user_id = 0;
     Direction target = Direction::TO_DEVICE;
-    Message msg = simp_enc.encode(user_msg);
+    Message msg = simp_enc.encode(user_msg, user_id);
     return msg.m_device_id == device && msg.m_cmd == cmd && msg.m_user_id == user_id && msg.m_target == target;
 }
 
