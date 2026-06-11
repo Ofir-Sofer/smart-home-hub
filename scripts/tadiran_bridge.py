@@ -50,7 +50,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
             with conn:
                 print(f"Connected by {addr}")
                 while True:
-                    data = conn.recv(1024)
+                    try:
+                        data = conn.recv(1024)
+                    except ConnectionResetError:
+                        print("Connection reset by peer, continuing...")
+                        break
                     if not data:
                         break
                     cmd = data.decode().strip()

@@ -22,6 +22,7 @@
 #include "message_handling/parser/parser.hpp"
 #include "common/message.hpp"
 #include "listener/feedback_listener.hpp"
+#include "devices/idevice.hpp"
 
 void worker(DeviceRegistry& device_registry, const std::string& device_id, TgBot::Bot& bot) {
     MessageQueue<Message>* device_queue = device_registry.get_queue(device_id);
@@ -36,7 +37,7 @@ void worker(DeviceRegistry& device_registry, const std::string& device_id, TgBot
         if (!wrapped_msg.has_value()) {
             break;
         }
-        DeviceResult res = device->process_command(wrapped_msg.value());
+        DeviceResult res = device->safe_execution(wrapped_msg.value());
         feedback_listener.forward_to_user(res, wrapped_msg.value().m_user_id, device_id, wrapped_msg.value());
     }
 }
