@@ -55,7 +55,7 @@ DeviceResult Tadiran::process_command(const Message &input_msg) {
 
     //set timeouts
     struct timeval timeout{};
-    timeout.tv_sec = 5;
+    timeout.tv_sec = 10;
     timeout.tv_usec = 0;
     setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
