@@ -8,8 +8,8 @@
 
 #include "listener/listener.hpp"
 
-Listener::Listener(MessageQueue<RawMessage>& main_queue, TgBot::Bot& bot, const std::string& authorized_users_path)
-    :m_main_queue(main_queue), m_bot(bot){
+Listener::Listener(MessageQueue<RawMessage>& main_queue, VoiceMsgManager& voice_manager, TgBot::Bot& bot, const std::string& authorized_users_path)
+    :m_main_queue(main_queue), m_voice_manager(voice_manager), m_bot(bot){
         std::ifstream file(authorized_users_path);
         if (!file.is_open()) {
             throw std::runtime_error("Could not open: " + authorized_users_path);
@@ -32,6 +32,7 @@ void Listener::start() {
         if(is_authorized(user_id)) {
             if (message->voice) {
                 // handle voice message
+                // push to recordings queue
                 std::string file_id = message->voice->fileId;
                 TgBot::File::Ptr file_info = m_bot.getApi().getFile(file_id);
                 std::string file_content = m_bot.getApi().downloadFile(file_info->filePath);
@@ -39,8 +40,8 @@ void Listener::start() {
                 std::ofstream file(file_path, std::ios::binary);
                 file.write(file_content.c_str(), file_content.size());
                 file.close();
-                RawMessage raw_msg = {"voice_msg:" + file_path, user_id};
-                push_to_main_queue(raw_msg);
+                RawMessage raw_msg = {file_path, user_id};
+                m_voice_manager.push(raw_msg);
             } else {
                 RawMessage raw_msg = {message->text, user_id};
                 push_to_main_queue(raw_msg);

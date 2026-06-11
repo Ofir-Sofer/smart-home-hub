@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
 
 #include "queues/message_queue.hpp"
 #include "message_handling/encoders/iencoder.hpp"

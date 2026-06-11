@@ -11,6 +11,7 @@
 
 //program includes
 #include "queues/message_queue.hpp"
+#include "message_handling/voice_msg_manager/voice_msg_manager.hpp"
 #include "listener/listener.hpp"
 #include "device_management/factory/device_factory.hpp"
 #include "device_management/registry/device_registry.hpp"
@@ -66,7 +67,8 @@ int main() {
     }
     TgBot::Bot telegram_bot(tg_token);
     std::string authorized_users_path = "config/authorized_users.json";
-    Listener listener(main_queue, telegram_bot, authorized_users_path);
+    VoiceMsgManager voice_manager(main_queue, telegram_bot);
+    Listener listener(main_queue, voice_manager, telegram_bot, authorized_users_path);
     std::string device_config_path = "config/devices.json";
     DeviceFactory device_factory(device_config_path);
     DeviceRegistry device_registry(device_factory);
@@ -98,6 +100,9 @@ int main() {
     }
 
     // main loop
+    std::thread voice_manager_thread([&voice_manager]() {
+        voice_manager.process_recordings();
+    });
     std::thread listener_thread([&listener]() {
         listener.start();
     });
@@ -121,6 +126,10 @@ int main() {
     listener.shutdown();
     if (listener_thread.joinable()) {
         listener_thread.join();
+    }
+    voice_manager.shutdown();
+    if (voice_manager_thread.joinable()) {
+        voice_manager_thread.join();
     }
     main_queue.shutdown();// ensure queue shutdown regardless of shutdown path
     device_registry.shutdown_all_queues();
