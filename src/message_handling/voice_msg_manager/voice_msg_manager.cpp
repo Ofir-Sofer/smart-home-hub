@@ -7,6 +7,8 @@
 #include "queues/message_queue.hpp"
 #include "common/message.hpp"
 
+namespace { void cleanup_audio_files(const std::string& raw_path, const std::string& wav_path); }
+
 void VoiceMsgManager::process_recordings() {
     while (true) {
         std::optional<RawMessage> wrapped_raw_msg = m_recording_queue.pop();
@@ -18,9 +20,19 @@ void VoiceMsgManager::process_recordings() {
             std::string target_wav = "/tmp/smart_home_hub/audio/voice_" + std::to_string(now) + ".wav";
             std::string convert_cmd = "ffmpeg -i " + file_path + " " + target_wav + " 2>/dev/null";
             FILE* pipe = popen(convert_cmd.c_str(), "r");
+            if (!pipe) {
+                m_bot.getApi().sendMessage(user_id, "there was an issue with the recording, please try again");
+                cleanup_audio_files(file_path, target_wav);
+                continue;
+            }
             pclose(pipe);
             std::string speech_to_text_cmd = "python3 scripts/hailo_speech_to_text.py --audio " + target_wav + " 2>/dev/null";
             FILE* stt_pipe = popen(speech_to_text_cmd.c_str(), "r");
+            if (!stt_pipe) {
+                m_bot.getApi().sendMessage(user_id, "there was an issue with the recording, please try again");
+                cleanup_audio_files(file_path, target_wav);
+                continue;
+            }
             char buffer[256];
             std::string result;
             while (fgets(buffer, sizeof(buffer), stt_pipe)) {
@@ -34,8 +46,7 @@ void VoiceMsgManager::process_recordings() {
             raw_msg.m_raw_input = result;
             m_main_queue.push(raw_msg);
             }
-            std::remove(file_path.c_str());
-            std::remove(target_wav.c_str());
+            cleanup_audio_files(file_path, target_wav);
         } else {
             break;
         }
@@ -48,4 +59,11 @@ void VoiceMsgManager::push(const RawMessage& raw_msg) {
 
 void VoiceMsgManager::shutdown() {
     m_recording_queue.shutdown();
+}
+
+namespace {
+    void cleanup_audio_files(const std::string& raw_path, const std::string& wav_path) {
+        std::remove(raw_path.c_str());
+        std::remove(wav_path.c_str());
+    }
 }

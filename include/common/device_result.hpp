@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <variant>
 
 enum class DeviceStatus {
     SUCCESS,
@@ -12,5 +11,5 @@ enum class DeviceStatus {
 
 struct DeviceResult {
     DeviceStatus m_status;
-    std::variant<std::string, int, float> m_data;
+    std::string m_data;
 };

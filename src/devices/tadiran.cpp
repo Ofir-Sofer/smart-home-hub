@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <cerrno>
 
 #include "devices/tadiran.hpp"
 #include "common/message.hpp"
@@ -74,17 +75,52 @@ DeviceResult Tadiran::process_command(const Message &input_msg) {
     }
 
     // Send data
-    send(sock, input_msg.m_cmd.c_str(), input_msg.m_cmd.size(), 0);
+    int send_return_value = send(sock, input_msg.m_cmd.c_str(), input_msg.m_cmd.size(), 0);
+    if (send_return_value < 0) {
+        int send_errno = errno;
+        close(sock);
+        switch (send_errno) {
+            case EWOULDBLOCK:
+                return {DeviceStatus::FAILURE, "timed out while sending to bridge"};
+            case EPIPE:
+                return {DeviceStatus::FAILURE, "connection to bridge is closed"};
+            case EINTR:
+                return {DeviceStatus::FAILURE, "send interrupted by signal (expected during shutdown; investigate if seen otherwise)"};
+            case ENOTCONN:
+                return {DeviceStatus::FAILURE, "socket not connected"};
+            default:
+                return {DeviceStatus::FAILURE, std::string("send error: ") + std::strerror(send_errno)};
+        }
+    }
+
 
     // Receive response
     char buffer[1024] = {};
-    recv(sock, buffer, sizeof(buffer), 0);
-    std::string response(buffer);
+    int recv_return_value = recv(sock, buffer, sizeof(buffer), 0);
+    int recv_errno = errno;
     close(sock);
-    if (response.find("OK") != std::string::npos) {
+    if (recv_return_value == 0) {
+        return {DeviceStatus::FAILURE, "connection closed before response received"};
+    } else if (recv_return_value < 0) {
+        // switch case by values and errors
+        switch (recv_errno) {
+            case EWOULDBLOCK:
+                return {DeviceStatus::FAILURE, "timed out waiting for response from bridge"};
+            case ECONNRESET:
+                return {DeviceStatus::FAILURE, "connection reset by bridge"};
+            case EINTR:
+                return {DeviceStatus::FAILURE, "receive interrupted by signal (expected during shutdown; investigate if seen otherwise)"};
+            case ENOTCONN:
+                return {DeviceStatus::FAILURE, "socket not connected"};
+            default:
+                return {DeviceStatus::FAILURE, std::string("receive error: ") + std::strerror(recv_errno)};
+        }
+    }
+    std::string response(buffer);
+    if (response.find("SUCCESSFUL EXECUTION") != std::string::npos) {
         return {DeviceStatus::SUCCESS, "command executed"};
     } else {
-        return {DeviceStatus::FAILURE, "error message"};
+        return {DeviceStatus::FAILURE, response};
     }
 }
 
