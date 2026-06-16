@@ -8,7 +8,7 @@
 #include "message_handling/encoders/simple_encoder.hpp"
 #include "llama.h"
 
-static void output_cleanup(std::string& output);
+namespace { void output_cleanup(std::string& output); }
 
 LlamaEncoder::LlamaEncoder(DeviceRegistry& registry, const std::string& model_path) 
 :m_registry(registry){
@@ -127,17 +127,19 @@ Message LlamaEncoder:: encode(const std::string &input, int64_t user_id) const {
     return simple_encoder.encode(output, user_id);
 }
 
-static void output_cleanup(std::string& output) {
-    output.erase(0, output.find_first_not_of(" \t\n\r"));
-    const std::string assistant_prefix = "<|assistant|>";
-    if (output.substr(0, assistant_prefix.size()) == assistant_prefix) {
-        output.erase(0, assistant_prefix.size());
+namespace {
+    void output_cleanup(std::string& output) {
+        output.erase(0, output.find_first_not_of(" \t\n\r"));
+        const std::string assistant_prefix = "<|assistant|>";
+        if (output.substr(0, assistant_prefix.size()) == assistant_prefix) {
+            output.erase(0, assistant_prefix.size());
+        }
+        output.erase(0, output.find_first_not_of(" \t\n\r"));
+        // keep only first line
+        auto newline = output.find('\n');
+        if (newline != std::string::npos) {
+            output = output.substr(0, newline);
+        }
+        output.erase(output.find_last_not_of(" \t\n\r") + 1);
     }
-    output.erase(0, output.find_first_not_of(" \t\n\r"));
-    // keep only first line
-    auto newline = output.find('\n');
-    if (newline != std::string::npos) {
-        output = output.substr(0, newline);
-    }
-    output.erase(output.find_last_not_of(" \t\n\r") + 1);
 }

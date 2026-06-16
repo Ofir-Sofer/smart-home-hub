@@ -58,6 +58,7 @@ int main() {
     std::cout << "Smart Home Hub starting...\n";
     std::filesystem::create_directories("/tmp/smart_home_hub/audio");
     std::signal(SIGINT, signal_handler);
+    std::signal(SIGPIPE, SIG_IGN); //err handle inside device obj that uses socker/pipe
     std::string settings_path = "config/settings.json";
     MessageQueue<RawMessage> main_queue("main");
     g_main_queue = &main_queue;

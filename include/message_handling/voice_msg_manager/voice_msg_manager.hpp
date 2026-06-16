@@ -2,7 +2,6 @@
 
 #include <string>
 #include <tgbot/tgbot.h>
-#include <atomic>
 
 #include "queues/message_queue.hpp"
 #include "common/message.hpp"

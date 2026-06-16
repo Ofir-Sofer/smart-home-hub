@@ -64,18 +64,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
                         if key in PARAM_COMMAND_MAP:
                             try:
                                 PARAM_COMMAND_MAP[key](device, value)
-                                conn.sendall(b"OK\n")
+                                conn.sendall(b"SUCCESSFUL EXECUTION\n")
                             except Exception as e:
                                 conn.sendall(f"ERROR: {e}\n".encode())
                         else:
-                            conn.sendall(b"ERROR: unknown command\n")
+                            conn.sendall(f"ERROR: unknown param command: {key}\n".encode())
                     elif cmd in COMMAND_MAP:
                         try:
                             COMMAND_MAP[cmd](device)
-                            conn.sendall(b"OK\n")
+                            conn.sendall(b"SUCCESSFUL EXECUTION\n")
                         except Exception as e:
                                 conn.sendall(f"ERROR: {e}\n".encode())
                     else:
-                        conn.sendall(b"ERROR: unknown command\n")
+                        conn.sendall(f"ERROR: unknown command: {cmd}\n".encode())
         except socket.timeout:
             continue  # check running flag again
