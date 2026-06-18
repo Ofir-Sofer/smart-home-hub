@@ -34,7 +34,7 @@ die() { echo "[setup] ERROR: $*" >&2; exit 1; }
 # ---------------------------------------------------------------------------
 install_system_packages() {
     log "Checking base system packages..."
-    local packages=(build-essential cmake git wget curl python3-pip jq libssl-dev libboost-all-dev libcurl4-openssl-dev ffmpeg libportaudio2)
+    local packages=(build-essential cmake git wget curl python3-pip jq libssl-dev libboost-all-dev libcurl4-openssl-dev ffmpeg libportaudio2 ninja-build)
     local missing=()
 
     for pkg in "${packages[@]}"; do
@@ -168,7 +168,7 @@ setup_llama_cpp() {
 
     (
         cd "$tmp_dir/llama.cpp" || exit 1
-        cmake -B build -DCMAKE_BUILD_TYPE=Release -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF || exit 1
+        cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF || exit 1
         cmake --build build -j"$(nproc)" || exit 1
         sudo cmake --install build || exit 1
         sudo ldconfig || exit 1

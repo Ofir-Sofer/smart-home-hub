@@ -68,7 +68,7 @@ It's idempotent (safe to re-run) and halts on the first error with an explanator
 
 #### System dependencies
 ```bash
-sudo apt install -y git cmake build-essential libssl-dev libboost-all-dev libcurl4-openssl-dev ffmpeg libportaudio2
+sudo apt install -y git cmake build-essential libssl-dev libboost-all-dev libcurl4-openssl-dev ffmpeg libportaudio2 ninja-build
 ```
 
 #### Python dependencies (required for device bridges and voice commands)
@@ -93,7 +93,7 @@ cd ..
 ```bash
 git clone https://github.com/ggerganov/llama.cpp.git
 cd llama.cpp
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF
 cmake --build build -j$(nproc)
 sudo cmake --install build
 sudo ldconfig
@@ -126,7 +126,7 @@ source ~/.bashrc
 ### Build
 
 ```bash
-cmake -S . -B build
+cmake -S . -B build -G Ninja
 cmake --build build
 ```
 
