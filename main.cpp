@@ -76,7 +76,7 @@ int main() {
     DeviceRegistry device_registry(device_factory);
     Server server(device_registry);
     std::unique_ptr<IEncoder> encoder;
-    {
+    try {
         std::ifstream file(settings_path);
         if (!file.is_open()) {
             throw std::runtime_error("Could not open: " + settings_path);
@@ -85,11 +85,15 @@ int main() {
         file >> j;
         std::string encoder_type = j["encoder"];
         if (encoder_type == "llama") {
-            std::string model_path = j["model_path"];
+            std::string active_model = j["active_model"];
+            std::string model_path = j["available_models"].at(active_model)["path"];
             encoder = std::make_unique<LlamaEncoder>(device_registry, model_path);
         } else {
             encoder = std::make_unique<SimpleEncoder>();
         }
+    } catch (std::exception& e) {
+        std::cerr << "settings.json error: " << e.what() << "\n";
+        return 1;
     }
     Parser parser(main_queue, *encoder, server);
 

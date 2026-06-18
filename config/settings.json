@@ -1,5 +1,14 @@
 {
-    "model_path": "models/Phi-3-mini-4k-instruct-q4.gguf",
+    "active_model": "phi-3-mini-4k-instruct-q4",
     "encoder": "llama",
-    "available_encoders": ["simple", "llama"]
+    "available_encoders": ["simple", "llama"],
+    "available_models": {
+        "phi-3-mini-4k-instruct-q4":
+        {
+            "path": "models/Phi-3-mini-4k-instruct-q4.gguf",
+            "url": "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf",
+            "expected_size_mb": 2390,
+            "min_ram_mb": 4096
+        }
+    }
 }
