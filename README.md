@@ -54,6 +54,16 @@ Device Thread (×N): Device Queue → Device → FeedbackListener → User
 
 ## Building
 
+### Quick setup
+
+Run the setup script from the project root to install all dependencies, build and install llama.cpp system-wide, and download the configured model:
+
+```bash
+./setup.sh
+```
+
+It's idempotent (safe to re-run) and halts on the first error with an explanatory message. It does not run the project build itself — see [Build](#build) below for that. The sections below document what it automates, for reference or for setting things up manually.
+
 ### Prerequisites
 
 #### System dependencies
@@ -83,26 +93,18 @@ cd ..
 ```bash
 git clone https://github.com/ggerganov/llama.cpp.git
 cd llama.cpp
-cmake -B build -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF
-cmake --build build -j4
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF
+cmake --build build -j$(nproc)
 sudo cmake --install build
-sudo cp build/bin/libggml*.so* /usr/local/lib/
-sudo cp build/bin/libllama*.so* /usr/local/lib/
-sudo cp ggml/include/ggml*.h /usr/local/include/
-sudo cp ggml/include/gguf.h /usr/local/include/
-sudo mkdir -p /usr/local/lib/cmake/llama
-sudo cp build/llama-config.cmake /usr/local/lib/cmake/llama/
-sudo cp build/llama-version.cmake /usr/local/lib/cmake/llama/
-sudo mkdir -p /usr/local/lib/cmake/ggml
-sudo cp build/ggml/ggml-config.cmake /usr/local/lib/cmake/ggml/
-sudo cp build/ggml/ggml-version.cmake /usr/local/lib/cmake/ggml/
 sudo ldconfig
 cd ..
 ```
 
+`cmake --install` places all required libraries, headers, and CMake config files (`llama-config.cmake`, `ggml-config.cmake`, etc.) under `/usr/local` on its own — no manual copying needed.
+
 #### Model file
 
-Download the Phi-3-mini model and place it in the `models/` folder:
+The model to download is determined by `active_model` in `config/settings.json` (see [Encoder settings](#encoder-settings) below). For the default configuration:
 
 ```bash
 wget -P models/ https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf
@@ -167,17 +169,27 @@ Type `SHUTDOWN!!!` to exit cleanly.
 
 ### Encoder settings
 
-The encoder and model path are configured in `config/settings.json`:
+The encoder and model selection are configured in `config/settings.json`:
 
 ```json
 {
-    "model_path": "models/Phi-3-mini-4k-instruct-q4.gguf",
+    "active_model": "phi-3-mini-4k-instruct-q4",
     "encoder": "llama",
-    "available_encoders": ["simple", "llama"]
+    "available_encoders": ["simple", "llama"],
+    "available_models": {
+        "phi-3-mini-4k-instruct-q4": {
+            "path": "models/Phi-3-mini-4k-instruct-q4.gguf",
+            "url": "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf",
+            "expected_size_mb": 2390,
+            "min_ram_mb": 4096
+        }
+    }
 }
 ```
 
 Set `"encoder": "simple"` to use rule-based parsing without a model. Set `"encoder": "llama"` for natural language processing — requires llama.cpp and a model file.
+
+`active_model` selects an entry from `available_models` by key. Each entry holds the local file path, the download URL, the expected file size, and the minimum RAM needed to run that model — this is what `setup.sh` reads to download and validate the model automatically. Adding a new model means adding a new entry here and pointing `active_model` at it.
 
 ### Device configuration
 
@@ -233,9 +245,12 @@ To find your Telegram user ID, send any message to your bot and check the termin
 - [x] Local LLM encoder (Phi-3-mini via llama.cpp)
 - [x] Tadiran AC integration (local Tuya protocol via Python bridge)
 - [x] Voice command support (Hailo8 Whisper speech-to-text)
+- [x] Automated setup script (`setup.sh`)
 - [ ] Hebrew language support for voice and text commands
 - [ ] Roborock vacuum integration (pending local API support for S8 MaxV Ultra)
 - [ ] Tapo camera integration (person detection, voice commands, recording control)
 - [ ] Hailo8 vision pipeline — person detection via Tapo camera feed
 - [ ] Eco router integration
 - [ ] Persistent logging
+- [ ] Hailo10 integration
+- [ ] External drive integration (offload model/build artifacts from SD card to free disk space)
