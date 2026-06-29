@@ -104,7 +104,11 @@ cd ..
 
 #### Model file
 
-The model to download is determined by `active_model` in `config/settings.json` (see [Encoder settings](#encoder-settings) below). For the default configuration:
+The model to download is determined by `active_model` in `config/settings.json` (see [Encoder settings](#encoder-settings) below).
+
+> **Note:** `models/` is not tracked by git. It is created by `setup.sh` — either as a local directory (default) or as a symlink to an external drive (`--external-drive <path>`). If you are running setup manually, create it yourself: `mkdir models/`.
+
+For the default configuration:
 
 ```bash
 wget -P models/ https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf

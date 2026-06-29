@@ -9,6 +9,10 @@
 #
 # Idempotent: safe to re-run; each step skips work that's already done.
 # Fails fast: halts on the first error with an explanatory message.
+#
+# Usage:
+#   ./setup.sh                              # default: store models on SD card
+#   ./setup.sh --external-drive /mnt/storage  # store models on external drive
 
 set -uo pipefail
 
@@ -26,8 +30,31 @@ HAILO_APPS_REPO_URL="https://github.com/hailo-ai/hailo-apps.git"
 # a pkg-config entry, or `ldconfig -p | grep libllama`).
 LLAMA_INSTALL_MARKER="/usr/local/include/llama.h"
 
+EXTERNAL_DRIVE=0
+EXTERNAL_DRIVE_PATH=""
+
 log() { echo "[setup] $*"; }
 die() { echo "[setup] ERROR: $*" >&2; exit 1; }
+
+# ---------------------------------------------------------------------------
+# Argument parsing
+# ---------------------------------------------------------------------------
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --external-drive)
+                [[ "${2-}" && "${2}" != --* ]] \
+                    || die "--external-drive requires a path argument (e.g. --external-drive /mnt/storage)"
+                EXTERNAL_DRIVE=1
+                EXTERNAL_DRIVE_PATH="$2"
+                shift 2
+                ;;
+            *)
+                die "Unknown option: $1"
+                ;;
+        esac
+    done
+}
 
 # ---------------------------------------------------------------------------
 # 1. Base system packages
@@ -75,7 +102,36 @@ setup_config_files() {
 }
 
 # ---------------------------------------------------------------------------
-# 3. Resolve the active model from settings.json
+# 3. External drive — verify mount and symlink models dir
+# ---------------------------------------------------------------------------
+setup_external_drive() {
+    log "External drive mode: using $EXTERNAL_DRIVE_PATH"
+
+    mountpoint -q "$EXTERNAL_DRIVE_PATH" \
+        || die "$EXTERNAL_DRIVE_PATH is not a mount point. Is the drive connected and mounted?"
+
+    local ext_models_dir="$EXTERNAL_DRIVE_PATH/models"
+    sudo mkdir -p "$ext_models_dir" || die "failed to create $ext_models_dir"
+    sudo chown "$(id -un):$(id -gn)" "$ext_models_dir" || die "failed to chown $ext_models_dir"
+
+    # Already correctly symlinked — nothing to do
+    if [ -L "$MODELS_DIR" ] && [ "$(readlink -f "$MODELS_DIR")" = "$(realpath "$ext_models_dir")" ]; then
+        log "models/ symlink already points to $ext_models_dir, skipping."
+        return
+    fi
+
+    # Real directory exists — refuse to silently clobber it
+    if [ -e "$MODELS_DIR" ] && [ ! -L "$MODELS_DIR" ]; then
+        die "$MODELS_DIR exists as a real directory. Move or remove it before using --external-drive."
+    fi
+
+    ln -sfn "$ext_models_dir" "$MODELS_DIR" \
+        || die "failed to symlink models/ → $ext_models_dir"
+    log "Linked $MODELS_DIR → $ext_models_dir"
+}
+
+# ---------------------------------------------------------------------------
+# 4. Resolve the active model from settings.json
 # ---------------------------------------------------------------------------
 # Sets globals: ENCODER, NEEDS_MODEL, ACTIVE_MODEL, MODEL_PATH, MODEL_URL,
 #               MODEL_SIZE_MB, MODEL_MIN_RAM_MB
@@ -108,7 +164,7 @@ resolve_active_model() {
 }
 
 # ---------------------------------------------------------------------------
-# 4. RAM check (model must fit in RAM to run, regardless of download status)
+# 5. RAM check (model must fit in RAM to run, regardless of download status)
 # ---------------------------------------------------------------------------
 check_ram() {
     local total_ram_mb
@@ -122,7 +178,7 @@ check_ram() {
 }
 
 # ---------------------------------------------------------------------------
-# 5. Model existence check (sets MODEL_EXISTS; drives disk check + download)
+# 6. Model existence check (sets MODEL_EXISTS; drives disk check + download)
 # ---------------------------------------------------------------------------
 check_model_exists() {
     local full_path="$PROJECT_ROOT/$MODEL_PATH"
@@ -136,7 +192,7 @@ check_model_exists() {
 }
 
 # ---------------------------------------------------------------------------
-# 6. Disk space check (only relevant if the model still needs downloading)
+# 7. Disk space check (only relevant if the model still needs downloading)
 # ---------------------------------------------------------------------------
 check_disk_space() {
     mkdir -p "$MODELS_DIR"
@@ -151,7 +207,7 @@ check_disk_space() {
 }
 
 # ---------------------------------------------------------------------------
-# 7. llama.cpp — system-wide build/install
+# 8. llama.cpp — system-wide build/install
 # ---------------------------------------------------------------------------
 setup_llama_cpp() {
     if [ -f "$LLAMA_INSTALL_MARKER" ]; then
@@ -178,7 +234,7 @@ setup_llama_cpp() {
 }
 
 # ---------------------------------------------------------------------------
-# 8. Model download (only if MODEL_EXISTS is false)
+# 9. Model download (only if MODEL_EXISTS is false)
 # ---------------------------------------------------------------------------
 download_model_if_missing() {
     if [ "$MODEL_EXISTS" -eq 1 ]; then
@@ -193,7 +249,7 @@ download_model_if_missing() {
 }
 
 # ---------------------------------------------------------------------------
-# 9. tinytuya (Python Tuya bridge dependency)
+# 10. tinytuya (Python Tuya bridge dependency)
 # ---------------------------------------------------------------------------
 install_tinytuya() {
     if python3 -c "import tinytuya" >/dev/null 2>&1; then
@@ -206,7 +262,7 @@ install_tinytuya() {
 }
 
 # ---------------------------------------------------------------------------
-# 10. hailo-apps (speech-to-text dependency, independent of encoder choice)
+# 11. hailo-apps (speech-to-text dependency, independent of encoder choice)
 # ---------------------------------------------------------------------------
 setup_hailo_apps() {
     if [ -d "$HAILO_APPS_DIR" ]; then
@@ -232,10 +288,16 @@ setup_hailo_apps() {
 # Main
 # ---------------------------------------------------------------------------
 main() {
+    parse_args "$@"
     log "Starting smart-home-hub environment setup..."
 
     install_system_packages
     setup_config_files
+
+    if [ "$EXTERNAL_DRIVE" -eq 1 ]; then
+        setup_external_drive
+    fi
+
     resolve_active_model
 
     if [ "$NEEDS_MODEL" -eq 1 ]; then
