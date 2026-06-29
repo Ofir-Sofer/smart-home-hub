@@ -51,7 +51,7 @@ config/authorized_users.json
 config/tadiran_config.json
 
 #models folder
-models
+models/
 
 #hailo apps
 hailo-apps/
