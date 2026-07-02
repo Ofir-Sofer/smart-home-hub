@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "message_handling/encoders/llama_encoder.hpp"
+#include "message_handling/encoders/smart_encoder.hpp"
 #include "device_management/registry/device_registry.hpp"
 #include "common/message.hpp"
 #include "message_handling/encoders/simple_encoder.hpp"
@@ -11,7 +12,7 @@
 namespace { void output_cleanup(std::string& output); }
 
 LlamaEncoder::LlamaEncoder(DeviceRegistry& registry, const std::string& model_path) 
-:m_registry(registry){
+:SmartEncoder(registry){
     llama_model_params model_params = llama_model_default_params();
     llama_log_set([](ggml_log_level level, const char* text, void* user_data) {
         // suppress all llama.cpp logs
@@ -34,21 +35,8 @@ LlamaEncoder::~LlamaEncoder() {
     llama_model_free(m_model);
 }
 
-std::string LlamaEncoder::build_prompt(const std::string& user_input) const {
-    std::vector<std::string> device_id_list = m_registry.get_device_id_list();
-    std::string prompt = "Available devices: ";
-    for (auto& device_id:device_id_list) {
-        std::string per_device_commands = device_id + " [";
-        std::vector<std::string> device_commands = m_registry.get_device(device_id)->get_commands();
-        for (auto& command:device_commands) {
-            per_device_commands = per_device_commands + command + ", ";
-        }
-        per_device_commands.erase(per_device_commands.size() - 2); //remove trailing space and comma
-        per_device_commands = per_device_commands + "], ";
-        prompt = prompt + per_device_commands;
-    }
-    prompt.erase(prompt.size() - 2); //remove trailing space and comma
-    prompt = prompt + ". User said: " + user_input + ". Respond ONLY with device_id:command or \
+std::string LlamaEncoder::build_prompt(const std::string& user_input) const { 
+    std::string prompt = m_per_device_commands_list + ". User said: " + user_input + ". Respond ONLY with device_id:command or \
         device_id:command:value format. Example: mini_inverter:set_mode:cold.\
         If the user's request does not clearly match any device or command, respond with exactly: UNKNOWN";
     prompt = "<|user|>\n" + prompt + "<|end|>\n<|assistant|>\n";

@@ -3,6 +3,7 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <iostream>
 #include <stdexcept>
 
 #include "device_management/factory/device_factory.hpp"
@@ -23,7 +24,12 @@ DeviceFactory::DeviceFactory(const std::string& config_path) {
         std::string device_type = device["device_type"];
         auto it = m_device_constructors.find(device_type);
         if (it != m_device_constructors.end()) {
-            m_device_map[device_id] = it->second(device_id);
+            try {
+                m_device_map[device_id] = it->second(device_id);
+            } catch(const std::exception& e) {
+                std::cerr << "Failed to create " << device_id << " instance. error:" << e.what() << '\n';
+                m_device_map[device_id] = nullptr;
+            }
         } else {
             throw std::runtime_error("Unknown device type: " + device_type);
         }
@@ -56,7 +62,9 @@ std::vector<std::string> DeviceFactory::get_device_id_list() const {
     std::vector<std::string> device_id_list;
     device_id_list.reserve(m_device_map.size());
     for (const auto& pair : m_device_map) {
-        device_id_list.push_back(pair.first);
+        if (pair.second != nullptr) {
+            device_id_list.push_back(pair.first);
+        }        
     }
     return device_id_list;
 }
