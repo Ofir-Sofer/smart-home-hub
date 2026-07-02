@@ -39,8 +39,8 @@ Device Thread → TadiranDevice → [TCP socket] → tadiran_bridge.py → [Tuya
 
 ### Design Patterns Used
 
-- **Strategy Pattern** — swappable encoder implementations (`IEncoder`). Currently supports `SimpleEncoder` (rule-based) and `LlamaEncoder` (local LLM via llama.cpp).
-- **Factory Method Pattern** — `DeviceFactory` maps device type strings to constructors, loaded from JSON config at runtime.
+- **Strategy Pattern** — swappable encoder implementations (`IEncoder`). Currently supports `SimpleEncoder` (rule-based) and `LlamaEncoder` (local LLM via llama.cpp), which inherits from `SmartEncoder` — an intermediate base that caches the device/command list once at construction, shared by any future LLM-backed encoder.
+- **Factory Method Pattern** — `DeviceFactory` maps device type strings to constructors, loaded from JSON config at runtime. Construction failures are isolated per-device (logged and skipped) rather than crashing the whole hub.
 - **Registry Pattern** — `DeviceRegistry` manages device instances and their dedicated message queues.
 - **Producer-Consumer** — thread-safe `MessageQueue<T>` with mutex and condition variable. Each device gets its own queue and thread.
 
@@ -209,6 +209,8 @@ Devices are configured in `config/devices.json`:
     ]
 }
 ```
+
+If a device fails to construct (e.g. an unreachable bridge or invalid config), the hub logs the error and continues starting up without that device — it simply won't appear in the device list or respond to commands. Other configured devices are unaffected.
 
 ### Tadiran AC bridge
 
