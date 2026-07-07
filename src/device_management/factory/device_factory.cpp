@@ -10,6 +10,7 @@
 #include "devices/idevice.hpp"
 #include "devices/dummy_device.hpp"
 #include "devices/tadiran.hpp"
+#include "devices/roborock.hpp"
 
 DeviceFactory::DeviceFactory(const std::string& config_path) {
     m_device_constructors = register_constructors();
@@ -54,6 +55,9 @@ DeviceFactory::ConstructorMap DeviceFactory::register_constructors() {
     };
     device_constructors["tadiran"] = [](const std::string& device_id) {
         return std::make_unique<Tadiran>(device_id);
+    };
+    device_constructors["roborock"] = [](const std::string& device_id) {
+        return std::make_unique<Roborock>(device_id);
     };
     return device_constructors;
 }

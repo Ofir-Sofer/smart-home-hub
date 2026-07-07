@@ -22,11 +22,13 @@ public:
     Tadiran(Tadiran&&) = delete;
     Tadiran& operator=(Tadiran&&) = delete;
     
-    DeviceResult process_command(const Message& input_msg) override;
     std::vector<std::string> get_commands() const override;
-
+    
 private:
     std::string m_bridge_ip;
     int m_bridge_port;
     pid_t m_bridge_pid;
+
+protected:  
+    DeviceResult process_command(const Message& input_msg) override;
 };

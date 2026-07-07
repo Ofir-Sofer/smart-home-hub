@@ -24,9 +24,9 @@ bool test_dummy_device() {
     DeviceResult res1 = {DeviceStatus::SUCCESS, success_data};
     DeviceResult res2 = {DeviceStatus::FAILURE, fail_data};
     DeviceResult res3 = {DeviceStatus::AWAITING_CONFIRMATION, user_respond_data};
-    return compare_device_results(device.process_command(success_msg), res1) && 
-        compare_device_results(device.process_command(fail_msg), res2) && 
-        compare_device_results(device.process_command(user_respond_msg), res3);
+    return compare_device_results(device.safe_execution(success_msg), res1) && 
+        compare_device_results(device.safe_execution(fail_msg), res2) && 
+        compare_device_results(device.safe_execution(user_respond_msg), res3);
 }
 
 void run_dummy_device_tests() {

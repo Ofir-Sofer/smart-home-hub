@@ -16,7 +16,7 @@
 #include "common/device_result.hpp"
 
 
-Tadiran::Tadiran(const std::string &device_id) 
+Tadiran::Tadiran(const std::string &device_id)
 :IDevice(device_id) {
     std::string settings_path = "config/tadiran_config.json";
     std::ifstream file(settings_path);
@@ -47,7 +47,7 @@ Tadiran::~Tadiran() {
     waitpid(m_bridge_pid, nullptr, 0);
 }
 
-DeviceResult Tadiran::process_command(const Message &input_msg) {
+DeviceResult Tadiran::process_command(const Message& input_msg) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         std::cerr << "Socket creation failed\n";

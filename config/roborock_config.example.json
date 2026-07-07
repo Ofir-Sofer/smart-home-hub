@@ -1,0 +1,7 @@
+{
+    "vacuum_entity_id": "vacuum.your_entity_id",
+    "button_entity_prefix": "button.your_entity_prefix_",
+    "routine_names": ["routine_one", "routine_two"],
+    "speed_values": ["off", "quiet", "balanced", "turbo", "max", "custom", "max_plus", "smart_mode"],
+    "base_url": "http://your-ha-host:8123"
+}

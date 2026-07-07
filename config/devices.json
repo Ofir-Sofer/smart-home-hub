@@ -7,6 +7,10 @@
         {
             "device_id": "mini_inverter",
             "device_type": "tadiran"
+        },
+        {
+            "device_id": "roborock",
+            "device_type": "roborock"
         }
     ]
 }
