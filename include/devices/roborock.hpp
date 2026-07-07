@@ -25,7 +25,7 @@ private:
     std::string m_button_entity_prefix;
     std::vector<std::string> m_routine_names;
     std::vector<std::string> m_speed_values;
-    const char* m_token;
+    const std::string m_token;
 
 protected:
     DeviceResult process_command(const Message& input_msg) override;

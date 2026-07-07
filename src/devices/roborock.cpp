@@ -11,14 +11,11 @@
 namespace { 
     size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata); 
     std::string stringify_list(const std::vector<std::string>& values);
+    std::string get_ha_token();
 }
 
 Roborock::Roborock(const std::string &device_id)
-:IDevice(device_id), m_token(std::getenv("HA_TOKEN")) {
-    if (!m_token) {
-        throw std::runtime_error("HA token does not exist");
-    }
-
+:IDevice(device_id), m_token(get_ha_token()) {
     std::string settings_path = "config/roborock_config.json";
     std::ifstream file(settings_path);
     if (!file.is_open()) {
@@ -39,7 +36,8 @@ Roborock::Roborock(const std::string &device_id)
     if (curl == nullptr) {
         throw std::runtime_error("Fail to initialize curl handle");
     }
-    
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 
     CURLcode res = curl_easy_perform(curl); 
     if (res != CURLE_OK) {
@@ -92,6 +90,8 @@ DeviceResult Roborock::process_command(const Message& input_msg) {
     if (curl == nullptr) {
         return {DeviceStatus::FAILURE, "Fail to initialize curl handle"};
     }
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
     
     std::string postfields_str = postfields.dump();
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfields_str.c_str());
@@ -117,7 +117,7 @@ DeviceResult Roborock::process_command(const Message& input_msg) {
 }
 
 CURL* Roborock::create_curl_handle(const std::string& command, std::string& buffer, curl_slist*& headers) {
-    std::string auth = "Authorization: Bearer " + std::string(m_token);
+    std::string auth = "Authorization: Bearer " + m_token;
     CURL* curl = curl_easy_init();          // 1. create handle
     if(!curl) {
         return nullptr;
@@ -140,6 +140,14 @@ std::vector<std::string> Roborock::get_commands() const {
 }
 
 namespace {
+    std::string get_ha_token() {
+        const char* token_env = std::getenv("HA_TOKEN");
+        if (!token_env) {
+            throw std::runtime_error("HA token does not exist");
+        }
+        return std::string(token_env);
+    }
+
     size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata) {
         std::string* buffer = static_cast<std::string*>(userdata);
         buffer->append(ptr, size * nmemb);
