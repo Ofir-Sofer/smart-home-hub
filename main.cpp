@@ -8,6 +8,7 @@
 #include <fstream>
 #include <filesystem>
 #include <tgbot/tgbot.h>
+#include <curl/curl.h>
 
 //program includes
 #include "queues/message_queue.hpp"
@@ -55,6 +56,7 @@ void signal_handler(int signal) {
 }
 
 int main() {
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     std::cout << "Smart Home Hub starting...\n";
     std::filesystem::create_directories("/tmp/smart_home_hub/audio");
     std::signal(SIGINT, signal_handler);
@@ -145,7 +147,8 @@ int main() {
             th.join();
         }
     }
-    // std::filesystem::remove_all("/tmp/smart_home_hub"); return after testing is done
+    std::filesystem::remove_all("/tmp/smart_home_hub"); return after testing is done
+    curl_global_cleanup(); 
     std::cout << "program shutdown\n";
 
     return 0;
