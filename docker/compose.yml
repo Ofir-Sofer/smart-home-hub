@@ -4,7 +4,6 @@ services:
     image: ghcr.io/home-assistant/home-assistant:stable
     network_mode: host
     restart: unless-stopped
-    privileged: true
     volumes:
       - /mnt/storage/homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
