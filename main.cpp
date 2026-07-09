@@ -147,7 +147,7 @@ int main() {
             th.join();
         }
     }
-    std::filesystem::remove_all("/tmp/smart_home_hub"); return after testing is done
+    std::filesystem::remove_all("/tmp/smart_home_hub");
     curl_global_cleanup(); 
     std::cout << "program shutdown\n";
 
