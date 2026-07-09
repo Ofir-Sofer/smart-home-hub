@@ -81,6 +81,10 @@ DeviceResult Roborock::process_command(const Message& input_msg) {
             postfields = {{"entity_id", m_vacuum_entity_id}, {"fan_speed", speed}};
             full_command = m_base_url + "/api/services/vacuum/" + command_type;
         } else {
+            if (split_ind != std::string::npos) {
+                std::cerr << "Wrong command format\n";
+                return {DeviceStatus::FAILURE, "Wrong command format"};
+            }
             postfields = {{"entity_id", m_vacuum_entity_id}};
             full_command = m_base_url + "/api/services/vacuum/" + input_msg.m_cmd;
         }
