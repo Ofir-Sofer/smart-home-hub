@@ -69,6 +69,7 @@ Run the setup script from the project root to install all dependencies, build an
 ```
 
 It's idempotent (safe to re-run) and halts on the first error with an explanatory message. It does not run the project build itself — see [Build](#build) below for that. The sections below document what it automates, for reference or for setting things up manually.
+`setup.sh` also installs a git pre-commit hook (via [pre-commit](https://pre-commit.com/)) that auto-fixes trailing whitespace and missing end-of-file newlines on every commit.
 
 ### Prerequisites
 
