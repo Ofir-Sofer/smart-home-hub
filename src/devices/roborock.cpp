@@ -23,11 +23,11 @@ Roborock::Roborock(const std::string &device_id)
     }
     nlohmann::json j;
     file >> j;
-    m_vacuum_entity_id = j["vacuum_entity_id"];
-    m_button_entity_prefix = j["button_entity_prefix"];
-    m_routine_names = j["routine_names"];
-    m_speed_values = j["speed_values"];
-    m_base_url = j["base_url"];
+    m_vacuum_entity_id = j.at("vacuum_entity_id");
+    m_button_entity_prefix = j.at("button_entity_prefix");
+    m_routine_names = j.at("routine_names");
+    m_speed_values = j.at("speed_values");
+    m_base_url = j.at("base_url");
 
     std::string buffer;
     const std::string full_command = m_base_url + "/api/states/" + m_vacuum_entity_id;

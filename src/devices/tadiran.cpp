@@ -25,8 +25,8 @@ Tadiran::Tadiran(const std::string &device_id)
     }
     nlohmann::json j;
     file >> j;
-    m_bridge_ip = j["bridge_ip"];
-    m_bridge_port = j["port"];
+    m_bridge_ip = j.at("bridge_ip");
+    m_bridge_port = j.at("port");
 
     //run python bridge
     m_bridge_pid = fork();

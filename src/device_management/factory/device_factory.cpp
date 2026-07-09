@@ -20,9 +20,9 @@ DeviceFactory::DeviceFactory(const std::string& config_path) {
     }
     nlohmann::json j;
     file >> j;
-    for (const auto& device : j["devices"]) {
-        std::string device_id = device["device_id"];
-        std::string device_type = device["device_type"];
+    for (const auto& device : j.at("devices")) {
+        std::string device_id = device.at("device_id");
+        std::string device_type = device.at("device_type");
         auto it = m_device_constructors.find(device_type);
         if (it != m_device_constructors.end()) {
             try {

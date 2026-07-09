@@ -85,10 +85,10 @@ int main() {
         }
         nlohmann::json j;
         file >> j;
-        std::string encoder_type = j["encoder"];
+        std::string encoder_type = j.at("encoder");
         if (encoder_type == "llama") {
-            std::string active_model = j["active_model"];
-            std::string model_path = j["available_models"].at(active_model)["path"];
+            std::string active_model = j.at("active_model");
+            std::string model_path = j.at("available_models").at(active_model).at("path");
             encoder = std::make_unique<LlamaEncoder>(device_registry, model_path);
         } else {
             encoder = std::make_unique<SimpleEncoder>();
