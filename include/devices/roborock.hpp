@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <curl/curl.h>
 
 #include "devices/idevice.hpp"
 #include "common/message.hpp"
@@ -10,6 +9,9 @@
 
 // Note: Roborock vacuum is tested via integration only.
 // Verified manually end-to-end via Telegram commands.
+
+struct curl_slist;
+using CURL = void;
 
 class Roborock : public IDevice {
 public:
