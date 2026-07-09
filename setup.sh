@@ -285,6 +285,20 @@ setup_hailo_apps() {
 }
 
 # ---------------------------------------------------------------------------
+# 12. pre-commit hooks (trailing whitespace / missing final newline, etc.)
+# ---------------------------------------------------------------------------
+setup_pre_commit_hooks() {
+    if ! command -v pre-commit >/dev/null 2>&1; then
+        log "Installing pre-commit..."
+        pip3 install pre-commit --break-system-packages \
+            || { log "WARNING: failed to install pre-commit, skipping hook setup"; return; }
+    fi
+
+    (cd "$PROJECT_ROOT" && pre-commit install) \
+        || log "WARNING: failed to install git pre-commit hook"
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 main() {
@@ -312,6 +326,7 @@ main() {
 
     install_tinytuya
     setup_hailo_apps
+    setup_pre_commit_hooks
 
     log "Setup complete. Project is ready to build: run cmake && make from the project root."
 }

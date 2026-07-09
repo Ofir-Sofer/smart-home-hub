@@ -16,13 +16,14 @@ public:
 
     void start();
     void shutdown();
-    
+
 private:
-    void push_to_main_queue(const RawMessage& user_input);
     MessageQueue<RawMessage>& m_main_queue;
     VoiceMsgManager& m_voice_manager;
     TgBot::Bot& m_bot;
     std::unordered_set<int64_t> m_authorized_users;
     std::atomic<bool> m_shutdown{false};
+
+    void push_to_main_queue(const RawMessage& user_input);
     bool is_authorized(int64_t user_id) const;
 };

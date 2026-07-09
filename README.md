@@ -11,6 +11,7 @@ A multithreaded C++ smart home hub running on Raspberry Pi 5 with Hailo8 AI HAT.
 - **Authorized users** — only whitelisted Telegram user IDs can send commands
 - **Extensible device system** — add new devices via JSON config without recompiling
 - **Python bridges for IoT devices** — lightweight Python bridges handle device-specific protocols (Tuya, etc.)
+- **Home Assistant integration** — devices exposed via Home Assistant (e.g. Roborock vacuum) are controlled over its REST API, no separate bridge process needed
 - **User feedback** — every command gets a Telegram response: confirmation on receipt, and device result (success/failure with command details) on completion
 - **Graceful shutdown** — clean thread and process teardown on exit
 
@@ -35,6 +36,11 @@ Voice message → Listener downloads .ogg → pushes "voice_msg:/tmp/path"
 For devices using a Python bridge:
 ```
 Device Thread → TadiranDevice → [TCP socket] → tadiran_bridge.py → [Tuya local protocol] → AC unit
+```
+
+For devices integrated via Home Assistant:
+```
+Device Thread → RoborockDevice → [HTTP REST, libcurl] → Home Assistant → [native Roborock integration] → vacuum
 ```
 
 ### Design Patterns Used
@@ -63,6 +69,7 @@ Run the setup script from the project root to install all dependencies, build an
 ```
 
 It's idempotent (safe to re-run) and halts on the first error with an explanatory message. It does not run the project build itself — see [Build](#build) below for that. The sections below document what it automates, for reference or for setting things up manually.
+`setup.sh` also installs a git pre-commit hook (via [pre-commit](https://pre-commit.com/)) that auto-fixes trailing whitespace and missing end-of-file newlines on every commit.
 
 ### Prerequisites
 
@@ -114,18 +121,33 @@ For the default configuration:
 wget -P models/ https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf
 ```
 
+#### Home Assistant (required for Roborock vacuum integration)
+
+Devices integrated via Home Assistant's REST API (currently the Roborock vacuum) need a running Home Assistant instance. A Docker Compose file is provided:
+
+```bash
+cd docker
+docker compose up -d
+```
+
+This runs Home Assistant Container with its config persisted to `/mnt/storage/homeassistant` (adjust the volume path in `docker/compose.yml` if your storage layout differs). Once it's up, complete the one-time setup at `http://<pi-ip>:8123`, add your Roborock vacuum through HA's native Roborock integration, and generate a long-lived access token under your HA profile — you'll need it for `HA_TOKEN` below.
+
 #### Environment variables
 
 ```bash
 export TELEGRAM_TOKEN="your_telegram_bot_token"
+export HA_TOKEN="your_home_assistant_long_lived_token"
 ```
 
 To persist across sessions, add to `~/.bashrc`:
 
 ```bash
 echo 'export TELEGRAM_TOKEN="your_token_here"' >> ~/.bashrc
+echo 'export HA_TOKEN="your_ha_token_here"' >> ~/.bashrc
 source ~/.bashrc
 ```
+
+`HA_TOKEN` is only required if a Home Assistant-integrated device (e.g. Roborock) is enabled in `config/devices.json`.
 
 ### Build
 
@@ -157,6 +179,9 @@ turn on the ac
 change ac mode to cold
 set temperature to 22
 turn off the ac
+start the vacuum
+send the vacuum back to the dock
+run the living room cleaning routine
 ```
 
 With `SimpleEncoder` — use `device_id:command` format:
@@ -165,6 +190,10 @@ With `SimpleEncoder` — use `device_id:command` format:
 mini_inverter:on
 mini_inverter:set_temp:22
 mini_inverter:set_mode:cold
+roborock:start
+roborock:return_to_base
+roborock:set_fan_speed:quiet
+roborock:run_routine:living_room
 ```
 
 Type `SHUTDOWN!!!` to exit cleanly.
@@ -205,6 +234,10 @@ Devices are configured in `config/devices.json`:
         {
             "device_id": "mini_inverter",
             "device_type": "tadiran"
+        },
+        {
+            "device_id": "roborock",
+            "device_type": "roborock"
         }
     ]
 }
@@ -234,6 +267,36 @@ Edit `config/tadiran_config.json` with your device details (obtain via [tinytuya
 
 Supported Tadiran commands: `on`, `off`, `set_temp:X` (16-32°C), `set_mode:X` (auto/cold/hot/wet/wind), `set_fan:X` (low/middle/high/auto/sleep/etc.)
 
+### Roborock vacuum
+
+The Roborock vacuum is controlled through Home Assistant's REST API rather than a direct device connection — see [Home Assistant setup](#home-assistant-required-for-roborock-vacuum-integration) above to get HA running and connected to the vacuum first.
+
+Copy the example config and fill in your entity details:
+
+```bash
+cp config/roborock_config.example.json config/roborock_config.json
+```
+
+Edit `config/roborock_config.json`:
+
+```json
+{
+    "base_url": "http://192.168.x.x:8123",
+    "vacuum_entity_id": "vacuum.your_vacuum_entity",
+    "button_entity_prefix": "button.your_vacuum_",
+    "routine_names": ["living_room", "bedroom"],
+    "speed_values": ["quiet", "balanced", "turbo", "max"]
+}
+```
+
+- `vacuum_entity_id` is the vacuum's entity ID in HA (`vacuum.*` domain) — used for `start`, `pause`, `stop`, `return_to_base`, `locate`, `clean_spot`, and `set_fan_speed`.
+- `button_entity_prefix` is the shared prefix of your Roborock routine entities in HA (`button.*` domain) — routines are exposed as buttons, not vacuum commands. `run_routine:<name>` appends `<name>` to this prefix to find the right entity.
+- `routine_names` and `speed_values` are the allowed values for `run_routine` and `set_fan_speed` — commands with any other value are rejected before an HTTP request is made. These same lists are surfaced to `LlamaEncoder` so the model only ever sees valid options.
+
+Supported Roborock commands: `start`, `pause`, `stop`, `return_to_base`, `locate`, `clean_spot`, `set_fan_speed:X` (one of `speed_values`), `run_routine:X` (one of `routine_names`). Multi-parameter commands (e.g. cleaning specific rooms by name in one call) aren't supported yet — tracked on the [Roadmap](#roadmap).
+
+Requires the `HA_TOKEN` environment variable (see [Environment variables](#environment-variables)).
+
 ### Authorized users
 
 Only whitelisted Telegram user IDs can send commands. Copy the example file and edit it with your real IDs:
@@ -252,11 +315,11 @@ To find your Telegram user ID, send any message to your bot and check the termin
 - [x] Tadiran AC integration (local Tuya protocol via Python bridge)
 - [x] Voice command support (Hailo8 Whisper speech-to-text)
 - [x] Automated setup script (`setup.sh`)
+- [x] External drive integration (offload model/build artifacts from SD card to free disk space)
+- [x] Roborock vacuum integration (via Home Assistant REST API; simple commands only — multi-parameter commands like room-specific cleaning pending)
 - [ ] Hebrew language support for voice and text commands
-- [ ] Roborock vacuum integration (pending local API support for S8 MaxV Ultra)
 - [ ] Tapo camera integration (person detection, voice commands, recording control)
 - [ ] Hailo8 vision pipeline — person detection via Tapo camera feed
 - [ ] Eco router integration
 - [ ] Persistent logging
 - [ ] Hailo10 integration
-- [ ] External drive integration (offload model/build artifacts from SD card to free disk space)

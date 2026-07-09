@@ -16,7 +16,7 @@
 #include "common/device_result.hpp"
 
 
-Tadiran::Tadiran(const std::string &device_id) 
+Tadiran::Tadiran(const std::string &device_id)
 :IDevice(device_id) {
     std::string settings_path = "config/tadiran_config.json";
     std::ifstream file(settings_path);
@@ -25,8 +25,8 @@ Tadiran::Tadiran(const std::string &device_id)
     }
     nlohmann::json j;
     file >> j;
-    m_bridge_ip = j["bridge_ip"];
-    m_bridge_port = j["port"];
+    m_bridge_ip = j.at("bridge_ip");
+    m_bridge_port = j.at("port");
 
     //run python bridge
     m_bridge_pid = fork();
@@ -47,7 +47,7 @@ Tadiran::~Tadiran() {
     waitpid(m_bridge_pid, nullptr, 0);
 }
 
-DeviceResult Tadiran::process_command(const Message &input_msg) {
+DeviceResult Tadiran::process_command(const Message& input_msg) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         std::cerr << "Socket creation failed\n";

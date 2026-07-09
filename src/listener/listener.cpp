@@ -16,7 +16,7 @@ Listener::Listener(MessageQueue<RawMessage>& main_queue, VoiceMsgManager& voice_
         }
         nlohmann::json j;
         file >> j;
-        for (const auto& user_id : j["authorized_users"]) {
+        for (const auto& user_id : j.at("authorized_users")) {
             m_authorized_users.insert(user_id.get<int64_t>());
         }
     }
