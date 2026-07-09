@@ -16,11 +16,11 @@ using CURL = void;
 class Roborock : public IDevice {
 public:
     Roborock(const std::string& device_id);
-    
+
     ~Roborock() = default;
-    
+
     std::vector<std::string> get_commands() const override;
-    
+
 private:
     std::string m_base_url;
     std::string m_vacuum_entity_id;

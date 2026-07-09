@@ -68,7 +68,7 @@ std::vector<std::string> DeviceFactory::get_device_id_list() const {
     for (const auto& pair : m_device_map) {
         if (pair.second != nullptr) {
             device_id_list.push_back(pair.first);
-        }        
+        }
     }
     return device_id_list;
 }

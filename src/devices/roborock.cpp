@@ -8,8 +8,8 @@
 
 #include "devices/roborock.hpp"
 
-namespace { 
-    size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata); 
+namespace {
+    size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata);
     std::string stringify_list(const std::vector<std::string>& values);
     std::string get_ha_token();
 }
@@ -39,7 +39,7 @@ Roborock::Roborock(const std::string &device_id)
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 
-    CURLcode res = curl_easy_perform(curl); 
+    CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
         curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
@@ -96,11 +96,11 @@ DeviceResult Roborock::process_command(const Message& input_msg) {
     }
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
-    
+
     std::string postfields_str = postfields.dump();
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfields_str.c_str());
-    
-    CURLcode res = curl_easy_perform(curl); 
+
+    CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
         curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
@@ -116,7 +116,7 @@ DeviceResult Roborock::process_command(const Message& input_msg) {
 
     curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
-    
+
     return {DeviceStatus::SUCCESS, "command executed"};
 }
 
@@ -130,7 +130,7 @@ CURL* Roborock::create_curl_handle(const std::string& command, std::string& buff
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
     curl_easy_setopt(curl, CURLOPT_URL, command.c_str());
-    
+
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, auth.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);

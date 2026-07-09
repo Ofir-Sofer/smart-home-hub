@@ -148,7 +148,7 @@ int main() {
         }
     }
     std::filesystem::remove_all("/tmp/smart_home_hub");
-    curl_global_cleanup(); 
+    curl_global_cleanup();
     std::cout << "program shutdown\n";
 
     return 0;
