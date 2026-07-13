@@ -2,7 +2,7 @@
     "devices": {
         "roborock": {
             "device_type": "roborock",
-            "description": "roborock v8 ultra vacuum and washer",
+            "description": "Roborock vacuum — cleans floors, returns to dock, runs cleaning routines, adjusts suction/fan speed",
             "commands": {
                 "start": [],
                 "pause": [],
@@ -16,7 +16,7 @@
         },
         "mini_inverter": {
             "device_type": "tadiran",
-            "description": "AC unit",
+            "description": "AC unit — controls power, temperature, mode, and fan speed",
             "commands": {
                 "on": [],
                 "off": [],
