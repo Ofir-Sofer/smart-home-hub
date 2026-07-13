@@ -66,31 +66,27 @@ DeviceResult Roborock::process_command(const Message& input_msg) {
     }
     std::string full_command;
     nlohmann::json postfields;
-    if (command_type == "run_routine") {
-        std::string routine = input_msg.m_cmd.substr(split_ind+1);
-        if (std::find(m_commands.at("run_routine").begin(), m_commands.at("run_routine").end(), routine) == m_commands.at("run_routine").end()) {
-            std::cerr << "Routine doesnt exist\n";
-            return {DeviceStatus::FAILURE, "Routine doesnt exist"};
+    if (!it->second.empty()) { //this command has fixed optional values
+        std::string value = input_msg.m_cmd.substr(split_ind+1);
+        if (!is_value_valid(it->second, value)) {
+            std::cerr << "Ilegal value: " << value <<"\n";
+            return {DeviceStatus::FAILURE, "Ilegal value"};
         }
-        full_command = m_base_url + "/api/services/button/press";
-        postfields = {{"entity_id", m_button_entity_prefix + routine}};
-    } else {
-        if (command_type == "set_fan_speed") {
-            std::string speed = input_msg.m_cmd.substr(split_ind+1);
-            if (std::find(m_commands.at("set_fan_speed").begin(), m_commands.at("set_fan_speed").end(), speed) == m_commands.at("set_fan_speed").end()) {
-                std::cerr << "Wrong fan speed value\n";
-                return {DeviceStatus::FAILURE, "Wrong fan speed value"};
-            }
-            postfields = {{"entity_id", m_vacuum_entity_id}, {"fan_speed", speed}};
+        if (command_type == "run_routine") {
+            full_command = m_base_url + "/api/services/button/press";
+            postfields = {{"entity_id", m_button_entity_prefix + value}};
+        } else if (command_type == "set_fan_speed") {
+            postfields = {{"entity_id", m_vacuum_entity_id}, {"fan_speed", value}};
             full_command = m_base_url + "/api/services/vacuum/" + command_type;
         } else {
-            if (split_ind != std::string::npos) {
-                std::cerr << "Wrong command format\n";
-                return {DeviceStatus::FAILURE, "Wrong command format"};
-            }
-            postfields = {{"entity_id", m_vacuum_entity_id}};
-            full_command = m_base_url + "/api/services/vacuum/" + input_msg.m_cmd;
+            return {DeviceStatus::FAILURE, "No request-building logic for command: " + command_type};
         }
+    } else { // command without input
+        if (split_ind != std::string::npos) {
+            return {DeviceStatus::FAILURE, "Wrong command format"};
+        }
+        postfields = {{"entity_id", m_vacuum_entity_id}};
+        full_command = m_base_url + "/api/services/vacuum/" + input_msg.m_cmd;
     }
     struct curl_slist* headers = nullptr;
     CURL* curl = create_curl_handle(full_command, buffer, headers);
