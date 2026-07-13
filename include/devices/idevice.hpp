@@ -22,7 +22,6 @@ protected:
     // value, that value is legal (exact match for discrete lists, in-bounds
     // for a "range(min,max)" entry). Derived classes call this at the top
     // of process_command before doing any actual device work.
-    [[nodiscard]] bool validate_command(const std::string& command, const std::string& value) const;
 
     // Populated by each derived class's constructor from devices.json.
     std::unordered_map<std::string, std::vector<std::string>> m_commands;
