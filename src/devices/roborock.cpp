@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "devices/roborock.hpp"
+#include "common/command_validation.hpp"
 
 namespace {
     size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata);
@@ -21,13 +22,11 @@ Roborock::Roborock(const std::string &device_id)
     if (!file.is_open()) {
         throw std::runtime_error("Could not open: " + settings_path);
     }
-    nlohmann::json j;
-    file >> j;
-    m_vacuum_entity_id = j.at("vacuum_entity_id");
-    m_button_entity_prefix = j.at("button_entity_prefix");
-    m_routine_names = j.at("routine_names");
-    m_speed_values = j.at("speed_values");
-    m_base_url = j.at("base_url");
+    nlohmann::json config_json;
+    file >> config_json;
+    m_vacuum_entity_id = config_json.at("vacuum_entity_id");
+    m_button_entity_prefix = config_json.at("button_entity_prefix");
+    m_base_url = config_json.at("base_url");
 
     std::string buffer;
     const std::string full_command = m_base_url + "/api/states/" + m_vacuum_entity_id;
@@ -61,11 +60,15 @@ DeviceResult Roborock::process_command(const Message& input_msg) {
     std::string buffer;
     size_t split_ind = input_msg.m_cmd.find(':');
     std::string command_type = input_msg.m_cmd.substr(0,split_ind);
+    auto it = m_commands.find(command_type);
+    if (it == m_commands.end()) {
+        return {DeviceStatus::FAILURE, "Command doesnt exist"};
+    }
     std::string full_command;
     nlohmann::json postfields;
     if (command_type == "run_routine") {
         std::string routine = input_msg.m_cmd.substr(split_ind+1);
-        if (std::find(m_routine_names.begin(), m_routine_names.end(), routine) == m_routine_names.end()) {
+        if (std::find(m_commands.at("run_routine").begin(), m_commands.at("run_routine").end(), routine) == m_commands.at("run_routine").end()) {
             std::cerr << "Routine doesnt exist\n";
             return {DeviceStatus::FAILURE, "Routine doesnt exist"};
         }
@@ -74,7 +77,7 @@ DeviceResult Roborock::process_command(const Message& input_msg) {
     } else {
         if (command_type == "set_fan_speed") {
             std::string speed = input_msg.m_cmd.substr(split_ind+1);
-            if (std::find(m_speed_values.begin(), m_speed_values.end(), speed) == m_speed_values.end()) {
+            if (std::find(m_commands.at("set_fan_speed").begin(), m_commands.at("set_fan_speed").end(), speed) == m_commands.at("set_fan_speed").end()) {
                 std::cerr << "Wrong fan speed value\n";
                 return {DeviceStatus::FAILURE, "Wrong fan speed value"};
             }
@@ -136,11 +139,6 @@ CURL* Roborock::create_curl_handle(const std::string& command, std::string& buff
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
     return curl;
-}
-
-std::vector<std::string> Roborock::get_commands() const {
-    std::vector<std::string> commands_list = {"start", "pause", "stop", "return_to_base", "locate", "clean_spot", "set_fan_speed:[" + stringify_list(m_speed_values) + "]", "run_routine:[" + stringify_list(m_routine_names) + "]"};
-    return commands_list;
 }
 
 namespace {

@@ -123,8 +123,3 @@ DeviceResult Tadiran::process_command(const Message& input_msg) {
         return {DeviceStatus::FAILURE, response};
     }
 }
-
-std::vector<std::string> Tadiran::get_commands() const {
-    std::vector<std::string> commands_list = {"on", "off", "set_temp", "set_mode", "set_fan"};
-    return commands_list;
-}

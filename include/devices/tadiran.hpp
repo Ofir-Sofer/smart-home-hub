@@ -22,8 +22,6 @@ public:
     Tadiran(Tadiran&&) = delete;
     Tadiran& operator=(Tadiran&&) = delete;
 
-    std::vector<std::string> get_commands() const override;
-
 private:
     std::string m_bridge_ip;
     int m_bridge_port;
