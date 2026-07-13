@@ -41,14 +41,16 @@ LlamaEncoder::~LlamaEncoder() {
 std::string LlamaEncoder::build_device_match_prompt(const std::string &user_input) const {
     std::ostringstream oss;
     oss << "Available devices:\n" << m_device_list
-        << "\nUser said: " << user_input
         << "\nWhich device_id best matches the user request? Respond with exactly one device_id from the list above, "
         << "using it exactly as written — never invent or modify a device_id."
         << "\nIf the request does not clearly match any device, respond with exactly: UNKNOWN"
         << "\nExamples:"
         << "\nUser said: turn on the ac -> mini_inverter\n"
         << "\nUser said: clean the living room -> roborock\n"
-        << "\nUser said: whats the weather -> UNKNOWN\n";
+        << "\nUser said: set temperature to 24 -> mini_inverter\n"
+        << "\nUser said: run clean program public -> roborock\n"
+        << "\nUser said: whats the weather -> UNKNOWN\n"
+        << "\nUser said: " << user_input << " -> ";
     return oss.str();
 }
 
@@ -56,14 +58,16 @@ std::string LlamaEncoder::build_command_match_prompt(const std::string &user_inp
     std::ostringstream oss;
     oss << "Device: " << device_id
         << "\nAvailable commands: " << command_list
-        << "\nUser said: " << user_input
         << "\nWhich command best matches the user's request? Respond with exactly one command from "
         << "the list above, using it exactly as written — never invent or modify a command name."
         << "\nIf the request does not clearly match any command, respond with exactly: UNKNOWN"
         << "\nExamples:"
         << "\nUser said: start cleaning -> start"
         << "\nUser said: come back to the dock -> return_to_base"
-        << "\nUser said: find the vacuum -> locate";
+        << "\nUser said: find the vacuum -> locate"
+        << "\nUser said: set ac temperature to 24 -> set_temp\n"
+        << "\nUser said: run clean program public -> run_routine\n"
+        << "\nUser said: " << user_input << "->";
     return oss.str();
 }
 
@@ -96,6 +100,7 @@ std::string LlamaEncoder::build_command_fixed_value_match_prompt(const std::stri
         << "\nExamples:"
         << "\nUser said: run the public routine -> public"
         << "\nUser said: do a deep clean plus -> deep_plus"
+        << "\nUser said: run clean program public -> public\n"
         << "\nUser said: run routine xyzabc -> UNKNOWN";
     return oss.str();
 }
@@ -150,13 +155,14 @@ Message LlamaEncoder:: encode(const std::string &input, int64_t user_id) const {
 }
 
 std::string LlamaEncoder::infer(const std::string& prompt) const{
+    std::string wrapped_prompt = "<|user|>\n" + prompt + "<|end|>\n<|assistant|>\n";
     llama_memory_t mem = llama_get_memory(m_ctx);
     llama_memory_clear(mem, false);
     int n_predict = 32;
     //tokenize
-    const int n_prompt = -llama_tokenize(m_vocab, prompt.c_str(), prompt.size(), NULL, 0, true, true);
+    const int n_prompt = -llama_tokenize(m_vocab, wrapped_prompt.c_str(), wrapped_prompt.size(), NULL, 0, true, true);
     std::vector<llama_token> prompt_tokens(n_prompt);
-    if (llama_tokenize(m_vocab, prompt.c_str(), prompt.size(), prompt_tokens.data(), prompt_tokens.size(), true, true) < 0) {
+    if (llama_tokenize(m_vocab, wrapped_prompt.c_str(), wrapped_prompt.size(), prompt_tokens.data(), prompt_tokens.size(), true, true) < 0) {
         throw std::runtime_error("error: failed to tokenize the prompt\n");
     }
 
