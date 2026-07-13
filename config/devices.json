@@ -1,16 +1,29 @@
 {
-    "devices": [
-        {
-            "device_id": "dummy_test",
-            "device_type": "dummy_device"
+    "devices": {
+        "roborock": {
+            "device_type": "roborock",
+            "description": "roborock v8 ultra vacuum and washer",
+            "commands": {
+                "start": [],
+                "pause": [],
+                "stop": [],
+                "return_to_base": [],
+                "locate": [],
+                "clean_spot": [],
+                "run_routine": ["deep", "deep_plus", "public", "routine_clean"],
+                "set_fan_speed": ["off", "quiet", "balanced", "turbo", "max", "custom", "max_plus", "smart_mode"]
+            }
         },
-        {
-            "device_id": "mini_inverter",
-            "device_type": "tadiran"
-        },
-        {
-            "device_id": "roborock",
-            "device_type": "roborock"
+        "mini_inverter": {
+            "device_type": "tadiran",
+            "description": "AC unit",
+            "commands": {
+                "on": [],
+                "off": [],
+                "set_temp": ["range(16,32)"],
+                "set_mode": ["cool", "heat", "dry", "fan", "auto"],
+                "set_fan": ["low", "middle", "high", "auto"]
+            }
         }
-    ]
+    }
 }
