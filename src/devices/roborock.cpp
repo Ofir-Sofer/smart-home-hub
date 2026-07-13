@@ -151,15 +151,4 @@ namespace {
         buffer->append(ptr, size * nmemb);
         return size * nmemb;
     }
-
-    std::string stringify_list(const std::vector<std::string>& values) {
-        std::string result;
-        for (const auto& v : values) {
-            result += v + ",";
-        }
-        if (!result.empty()) {
-            result.pop_back(); // remove trailing comma
-        }
-        return result;
-    }
 }

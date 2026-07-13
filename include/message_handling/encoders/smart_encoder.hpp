@@ -2,6 +2,7 @@
 
 #include <string>
 #include <cstdint>
+#include <vector>
 
 #include "message_handling/encoders/iencoder.hpp"
 #include "device_management/registry/device_registry.hpp"

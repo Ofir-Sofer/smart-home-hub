@@ -13,7 +13,6 @@
 #include "llama.h"
 
 namespace { void output_cleanup(std::string& output); }
-// std::pair<int, int> parse_range(const std::string& range_str); }
 
 LlamaEncoder::LlamaEncoder(DeviceRegistry& registry, const std::string& model_path)
 :SmartEncoder(registry){
@@ -135,14 +134,6 @@ Message LlamaEncoder:: encode(const std::string &input, int64_t user_id) const {
             if (value == "UNKNOWN") {
                 throw std::runtime_error("No matching value for command " + command + " found for device: " + device_id);
             }
-            // try {
-            //     int numeric_value = std::stoi(value);
-            //     if (numeric_value < range.first || numeric_value > range.second) {
-            //         throw std::runtime_error("Value '" + value + "' out of range for " + device_id + ":" + command);
-            //     }
-            // } catch (const std::invalid_argument&) {
-            //     throw std::runtime_error("Value '" + value + "' is not numeric for " + device_id + ":" + command);
-            // }
         } else {
             std::string value_list = join_comma_separated(allowed_values);
             prompt = build_command_fixed_value_match_prompt(input, device_id, command, value_list);
@@ -150,9 +141,6 @@ Message LlamaEncoder:: encode(const std::string &input, int64_t user_id) const {
             if (value == "UNKNOWN") {
                 throw std::runtime_error("No matching value for command " + command + " found for device: " + device_id);
             }
-            // if (std::find(allowed_values.begin(), allowed_values.end(), value) == allowed_values.end()) {
-            //     throw std::runtime_error("Value '" + value + "' not in allowed list for " + device_id + ":" + command);
-            // }
         }
         full_output += ":" + value;
     }
@@ -241,14 +229,4 @@ namespace {
         }
         output.erase(output.find_last_not_of(" \t\n\r") + 1);
     }
-
-    // std::pair<int, int> parse_range(const std::string& range_str) {
-    //     size_t open_paren = range_str.find('(');
-    //     size_t close_paren = range_str.find(')');
-    //     std::string inside = range_str.substr(open_paren + 1, close_paren - open_paren - 1);
-    //     size_t comma = inside.find(',');
-    //     int min_val = std::stoi(inside.substr(0, comma));
-    //     int max_val = std::stoi(inside.substr(comma + 1));
-    //     return {min_val, max_val};
-    // }
 }
