@@ -11,7 +11,6 @@
 
 namespace {
     size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata);
-    std::string stringify_list(const std::vector<std::string>& values);
     std::string get_ha_token();
 }
 

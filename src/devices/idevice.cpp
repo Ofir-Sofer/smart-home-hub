@@ -5,9 +5,8 @@
 #include "devices/idevice.hpp"
 #include "common/device_result.hpp"
 
-IDevice::IDevice(const std::string& device_id)
+IDevice::IDevice(const std::string& device_id, const std::string& devices_settings)
 :m_device_id(device_id) {
-    std::string devices_settings = "config/devices.json";
     std::ifstream devices_file(devices_settings);
     if (!devices_file.is_open()) {
         throw std::runtime_error("Could not open: " + devices_settings);

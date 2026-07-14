@@ -15,7 +15,7 @@ public:
     DeviceResult safe_execution(const Message& input_msg);
 
 protected:
-    IDevice(const std::string& device_id);
+    IDevice(const std::string& device_id, const std::string& devices_settings = "config/devices.json");
 
     virtual DeviceResult process_command(const Message& input_msg) = 0;
 

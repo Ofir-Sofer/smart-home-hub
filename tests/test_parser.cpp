@@ -15,13 +15,13 @@ bool test_parser_proccess_message() {
     DeviceRegistry device_registry(device_factory);
     Server server(device_registry);
     Parser parser(user_input_queue, encoder, server);
-    std::string device_id = "vacuum_sim";
+    std::string device_id = "dummy_test";
     std::string cmd = "success";
     RawMessage user_input = {device_id + ":" + cmd, 0};
     user_input_queue.push(user_input);
     parser.process_message();
-    MessageQueue<Message>* vacuum_sim_queue = device_registry.get_queue("vacuum_sim");
-    std::optional<Message> wrapped_poped_msg = vacuum_sim_queue->pop();
+    MessageQueue<Message>* dummy_test_queue = device_registry.get_queue("dummy_test");
+    std::optional<Message> wrapped_poped_msg = dummy_test_queue->pop();
     if (!wrapped_poped_msg.has_value()) {
         return false;
     }
