@@ -6,8 +6,8 @@
 
 class DummyDevice : public IDevice {
 public:
-    DummyDevice(const std::string& device_id) : IDevice(device_id) {};
-    std::vector<std::string> get_commands() const override;
+    DummyDevice(const std::string& device_id)
+    : IDevice(device_id, "config/test_devices.json") {};
 
 protected:
     DeviceResult process_command(const Message& input_msg) override;

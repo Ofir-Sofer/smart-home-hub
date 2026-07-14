@@ -14,6 +14,7 @@
 #include "devices/tadiran.hpp"
 #include "common/message.hpp"
 #include "common/device_result.hpp"
+#include "common/command_validation.hpp"
 
 
 Tadiran::Tadiran(const std::string &device_id)
@@ -48,6 +49,29 @@ Tadiran::~Tadiran() {
 }
 
 DeviceResult Tadiran::process_command(const Message& input_msg) {
+    size_t split_ind = input_msg.m_cmd.find(':');
+    std::string command_type = input_msg.m_cmd.substr(0,split_ind);
+    auto it = m_commands.find(command_type);
+    if (it == m_commands.end()) {
+        return {DeviceStatus::FAILURE, "Command doesnt exist"};
+    }
+    if (!it->second.empty()) { //this command has fixed optional values
+        std::string value = input_msg.m_cmd.substr(split_ind+1);
+        try {
+            if (!is_value_valid(it->second, value)) {
+                std::cerr << "Ilegal value: " << value <<"\n";
+                return {DeviceStatus::FAILURE, "Ilegal value"};
+            }
+        } catch(const std::exception& e) {
+            std::cerr << e.what() << '\n';
+            return {DeviceStatus::FAILURE, "Wrong value format"};
+        }
+    } else {
+        if (split_ind != std::string::npos) {
+            return {DeviceStatus::FAILURE, "Wrong command format"};
+        }
+    }
+
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         std::cerr << "Socket creation failed\n";
@@ -122,9 +146,4 @@ DeviceResult Tadiran::process_command(const Message& input_msg) {
     } else {
         return {DeviceStatus::FAILURE, response};
     }
-}
-
-std::vector<std::string> Tadiran::get_commands() const {
-    std::vector<std::string> commands_list = {"on", "off", "set_temp", "set_mode", "set_fan"};
-    return commands_list;
 }

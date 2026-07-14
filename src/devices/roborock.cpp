@@ -7,10 +7,10 @@
 #include <algorithm>
 
 #include "devices/roborock.hpp"
+#include "common/command_validation.hpp"
 
 namespace {
     size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata);
-    std::string stringify_list(const std::vector<std::string>& values);
     std::string get_ha_token();
 }
 
@@ -21,13 +21,11 @@ Roborock::Roborock(const std::string &device_id)
     if (!file.is_open()) {
         throw std::runtime_error("Could not open: " + settings_path);
     }
-    nlohmann::json j;
-    file >> j;
-    m_vacuum_entity_id = j.at("vacuum_entity_id");
-    m_button_entity_prefix = j.at("button_entity_prefix");
-    m_routine_names = j.at("routine_names");
-    m_speed_values = j.at("speed_values");
-    m_base_url = j.at("base_url");
+    nlohmann::json config_json;
+    file >> config_json;
+    m_vacuum_entity_id = config_json.at("vacuum_entity_id");
+    m_button_entity_prefix = config_json.at("button_entity_prefix");
+    m_base_url = config_json.at("base_url");
 
     std::string buffer;
     const std::string full_command = m_base_url + "/api/states/" + m_vacuum_entity_id;
@@ -61,33 +59,33 @@ DeviceResult Roborock::process_command(const Message& input_msg) {
     std::string buffer;
     size_t split_ind = input_msg.m_cmd.find(':');
     std::string command_type = input_msg.m_cmd.substr(0,split_ind);
+    auto it = m_commands.find(command_type);
+    if (it == m_commands.end()) {
+        return {DeviceStatus::FAILURE, "Command doesnt exist"};
+    }
     std::string full_command;
     nlohmann::json postfields;
-    if (command_type == "run_routine") {
-        std::string routine = input_msg.m_cmd.substr(split_ind+1);
-        if (std::find(m_routine_names.begin(), m_routine_names.end(), routine) == m_routine_names.end()) {
-            std::cerr << "Routine doesnt exist\n";
-            return {DeviceStatus::FAILURE, "Routine doesnt exist"};
+    if (!it->second.empty()) { //this command has fixed optional values
+        std::string value = input_msg.m_cmd.substr(split_ind+1);
+        if (!is_value_valid(it->second, value)) {
+            std::cerr << "Ilegal value: " << value <<"\n";
+            return {DeviceStatus::FAILURE, "Ilegal value"};
         }
-        full_command = m_base_url + "/api/services/button/press";
-        postfields = {{"entity_id", m_button_entity_prefix + routine}};
-    } else {
-        if (command_type == "set_fan_speed") {
-            std::string speed = input_msg.m_cmd.substr(split_ind+1);
-            if (std::find(m_speed_values.begin(), m_speed_values.end(), speed) == m_speed_values.end()) {
-                std::cerr << "Wrong fan speed value\n";
-                return {DeviceStatus::FAILURE, "Wrong fan speed value"};
-            }
-            postfields = {{"entity_id", m_vacuum_entity_id}, {"fan_speed", speed}};
+        if (command_type == "run_routine") {
+            full_command = m_base_url + "/api/services/button/press";
+            postfields = {{"entity_id", m_button_entity_prefix + value}};
+        } else if (command_type == "set_fan_speed") {
+            postfields = {{"entity_id", m_vacuum_entity_id}, {"fan_speed", value}};
             full_command = m_base_url + "/api/services/vacuum/" + command_type;
         } else {
-            if (split_ind != std::string::npos) {
-                std::cerr << "Wrong command format\n";
-                return {DeviceStatus::FAILURE, "Wrong command format"};
-            }
-            postfields = {{"entity_id", m_vacuum_entity_id}};
-            full_command = m_base_url + "/api/services/vacuum/" + input_msg.m_cmd;
+            return {DeviceStatus::FAILURE, "No request-building logic for command: " + command_type};
         }
+    } else { // command without input
+        if (split_ind != std::string::npos) {
+            return {DeviceStatus::FAILURE, "Wrong command format"};
+        }
+        postfields = {{"entity_id", m_vacuum_entity_id}};
+        full_command = m_base_url + "/api/services/vacuum/" + input_msg.m_cmd;
     }
     struct curl_slist* headers = nullptr;
     CURL* curl = create_curl_handle(full_command, buffer, headers);
@@ -138,11 +136,6 @@ CURL* Roborock::create_curl_handle(const std::string& command, std::string& buff
     return curl;
 }
 
-std::vector<std::string> Roborock::get_commands() const {
-    std::vector<std::string> commands_list = {"start", "pause", "stop", "return_to_base", "locate", "clean_spot", "set_fan_speed:[" + stringify_list(m_speed_values) + "]", "run_routine:[" + stringify_list(m_routine_names) + "]"};
-    return commands_list;
-}
-
 namespace {
     std::string get_ha_token() {
         const char* token_env = std::getenv("HA_TOKEN");
@@ -156,16 +149,5 @@ namespace {
         std::string* buffer = static_cast<std::string*>(userdata);
         buffer->append(ptr, size * nmemb);
         return size * nmemb;
-    }
-
-    std::string stringify_list(const std::vector<std::string>& values) {
-        std::string result;
-        for (const auto& v : values) {
-            result += v + ",";
-        }
-        if (!result.empty()) {
-            result.pop_back(); // remove trailing comma
-        }
-        return result;
     }
 }

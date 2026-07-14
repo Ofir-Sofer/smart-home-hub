@@ -45,10 +45,22 @@ Device Thread → RoborockDevice → [HTTP REST, libcurl] → Home Assistant →
 
 ### Design Patterns Used
 
-- **Strategy Pattern** — swappable encoder implementations (`IEncoder`). Currently supports `SimpleEncoder` (rule-based) and `LlamaEncoder` (local LLM via llama.cpp), which inherits from `SmartEncoder` — an intermediate base that caches the device/command list once at construction, shared by any future LLM-backed encoder.
+- **Strategy Pattern** — swappable encoder implementations (`IEncoder`). Currently supports `SimpleEncoder` (rule-based) and `LlamaEncoder` (local LLM via llama.cpp), which inherits from `SmartEncoder` — an intermediate base that caches the device list (id + description) once at construction, shared by any future LLM-backed encoder.
 - **Factory Method Pattern** — `DeviceFactory` maps device type strings to constructors, loaded from JSON config at runtime. Construction failures are isolated per-device (logged and skipped) rather than crashing the whole hub.
 - **Registry Pattern** — `DeviceRegistry` manages device instances and their dedicated message queues.
 - **Producer-Consumer** — thread-safe `MessageQueue<T>` with mutex and condition variable. Each device gets its own queue and thread.
+
+### LLM Command Resolution
+
+`LlamaEncoder` resolves a natural-language message into a `device_id:command[:value]` string through three sequential, narrower-scoped inference calls rather than one combined prompt:
+
+1. **Device selection** — given the full device list (id + description), the model picks one `device_id` or responds `UNKNOWN`.
+2. **Command selection** — given only the chosen device's command list, the model picks one `command` or `UNKNOWN`.
+3. **Value selection** (only if the command takes one) — given the command's allowed values (a discrete list, or a numeric range), the model picks a value or `UNKNOWN`; the answer is then validated against the same allowed list/range before being accepted.
+
+Each stage short-circuits on `UNKNOWN`, stopping the pipeline immediately. This replaced an earlier single-prompt design that asked the model to resolve device, command, and value simultaneously — that design let the model guess a plausible-but-wrong answer on ambiguous or garbage input (e.g. a made-up routine name silently resolving to a real one) rather than admitting uncertainty. Splitting into narrower per-stage decisions, each with its own worked examples, fixed this without needing a larger model.
+
+Command and value legality is validated at the **device** level, not the encoder level — see [Device configuration](#device-configuration) below. The encoder only ever checks for `UNKNOWN`; whether a command/value is legal for a given device is `IDevice`'s responsibility, since that keeps validation correct regardless of which encoder produced the command (`LlamaEncoder`, `SimpleEncoder`, or any future one).
 
 ### Threading Model
 
@@ -181,7 +193,7 @@ set temperature to 22
 turn off the ac
 start the vacuum
 send the vacuum back to the dock
-run the living room cleaning routine
+run the public cleaning routine
 ```
 
 With `SimpleEncoder` — use `device_id:command` format:
@@ -189,11 +201,11 @@ With `SimpleEncoder` — use `device_id:command` format:
 ```
 mini_inverter:on
 mini_inverter:set_temp:22
-mini_inverter:set_mode:cold
+mini_inverter:set_mode:cool
 roborock:start
 roborock:return_to_base
 roborock:set_fan_speed:quiet
-roborock:run_routine:living_room
+roborock:run_routine:public
 ```
 
 Type `SHUTDOWN!!!` to exit cleanly.
@@ -226,24 +238,50 @@ Set `"encoder": "simple"` to use rule-based parsing without a model. Set `"encod
 
 ### Device configuration
 
-Devices are configured in `config/devices.json`:
+Devices are configured in `config/devices.json`. Each entry specifies its type, a natural-language description (used by `LlamaEncoder` for device selection), and a `commands` map describing every command it supports and what values (if any) each one accepts:
 
 ```json
 {
-    "devices": [
-        {
-            "device_id": "mini_inverter",
-            "device_type": "tadiran"
+    "devices": {
+        "mini_inverter": {
+            "device_type": "tadiran",
+            "description": "AC unit — controls power, temperature, mode, and fan speed",
+            "commands": {
+                "on": [],
+                "off": [],
+                "set_temp": ["range(16,32)"],
+                "set_mode": ["cool", "heat", "dry", "fan", "auto"],
+                "set_fan": ["low", "middle", "high", "auto"]
+            }
         },
-        {
-            "device_id": "roborock",
-            "device_type": "roborock"
+        "roborock": {
+            "device_type": "roborock",
+            "description": "Roborock vacuum — cleans floors, returns to dock, runs cleaning routines, adjusts suction/fan speed",
+            "commands": {
+                "start": [],
+                "pause": [],
+                "stop": [],
+                "return_to_base": [],
+                "locate": [],
+                "clean_spot": [],
+                "run_routine": ["deep", "deep_plus", "public", "full"],
+                "set_fan_speed": ["off", "quiet", "balanced", "turbo", "max", "custom", "max_plus", "smart_mode"]
+            }
         }
-    ]
+    }
 }
 ```
 
-If a device fails to construct (e.g. an unreachable bridge or invalid config), the hub logs the error and continues starting up without that device — it simply won't appear in the device list or respond to commands. Other configured devices are unaffected.
+A command's value list has three possible shapes:
+- **Empty array** (`[]`) — the command takes no value (e.g. `on`, `start`).
+- **A list of strings** — the command must take exactly one of these values (e.g. `set_mode`).
+- **A single-element `["range(min,max)"]`** — the command takes any integer within that inclusive range (e.g. `set_temp`).
+
+This file is git-tracked — unlike `*_config.json` files (which hold per-account secrets like local keys and tokens), `devices.json` is functional schema the code needs to run, and doubles as documentation of what each device supports.
+
+Every device reads its own entry from `devices.json` directly via `IDevice`'s constructor, and uses it for two things: `LlamaEncoder` reads the `commands`/`description` data (via `DeviceRegistry`/`DeviceFactory`) to build its per-stage prompts, and each device (`Roborock`, `Tadiran`) independently validates incoming commands/values against this same schema before acting on them — command/value legality is enforced at the device, not the encoder (see [LLM Command Resolution](#llm-command-resolution) above).
+
+If a device fails to construct (e.g. an unreachable bridge, invalid config, or a missing `devices.json` entry), the hub logs the error and continues starting up without that device — it simply won't appear in the device list or respond to commands. Other configured devices are unaffected.
 
 ### Tadiran AC bridge
 
@@ -265,7 +303,7 @@ Edit `config/tadiran_config.json` with your device details (obtain via [tinytuya
 }
 ```
 
-Supported Tadiran commands: `on`, `off`, `set_temp:X` (16-32°C), `set_mode:X` (auto/cold/hot/wet/wind), `set_fan:X` (low/middle/high/auto/sleep/etc.)
+Supported Tadiran commands: `on`, `off`, `set_temp:X` (16–32°C), `set_mode:X` (`cool`/`heat`/`dry`/`fan`/`auto`), `set_fan:X` (`low`/`middle`/`high`/`auto`). Command/value schema lives in `config/devices.json`, not here — this list is for quick reference.
 
 ### Roborock vacuum
 
@@ -283,17 +321,16 @@ Edit `config/roborock_config.json`:
 {
     "base_url": "http://192.168.x.x:8123",
     "vacuum_entity_id": "vacuum.your_vacuum_entity",
-    "button_entity_prefix": "button.your_vacuum_",
-    "routine_names": ["living_room", "bedroom"],
-    "speed_values": ["quiet", "balanced", "turbo", "max"]
+    "button_entity_prefix": "button.your_vacuum_"
 }
 ```
 
 - `vacuum_entity_id` is the vacuum's entity ID in HA (`vacuum.*` domain) — used for `start`, `pause`, `stop`, `return_to_base`, `locate`, `clean_spot`, and `set_fan_speed`.
 - `button_entity_prefix` is the shared prefix of your Roborock routine entities in HA (`button.*` domain) — routines are exposed as buttons, not vacuum commands. `run_routine:<name>` appends `<name>` to this prefix to find the right entity.
-- `routine_names` and `speed_values` are the allowed values for `run_routine` and `set_fan_speed` — commands with any other value are rejected before an HTTP request is made. These same lists are surfaced to `LlamaEncoder` so the model only ever sees valid options.
 
-Supported Roborock commands: `start`, `pause`, `stop`, `return_to_base`, `locate`, `clean_spot`, `set_fan_speed:X` (one of `speed_values`), `run_routine:X` (one of `routine_names`). Multi-parameter commands (e.g. cleaning specific rooms by name in one call) aren't supported yet — tracked on the [Roadmap](#roadmap).
+The allowed values for `run_routine` and `set_fan_speed` — along with every other command this device supports — live in `config/devices.json`, not here (see [Device configuration](#device-configuration)).
+
+Supported Roborock commands: `start`, `pause`, `stop`, `return_to_base`, `locate`, `clean_spot`, `set_fan_speed:X`, `run_routine:X` (see `config/devices.json` for current allowed values). Multi-parameter commands (e.g. cleaning specific rooms by name in one call) aren't supported yet — tracked on the [Roadmap](#roadmap).
 
 Requires the `HA_TOKEN` environment variable (see [Environment variables](#environment-variables)).
 

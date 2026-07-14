@@ -1,12 +1,12 @@
 {
-    "devices": [
-        {
-            "device_id": "dummy_test",
-            "device_type": "dummy_device"
-        },
-        {
-            "device_id": "vacuum_sim",
-            "device_type": "vacuum_sim_cleaner"
+    "devices": {
+        "dummy_test": {
+            "device_type": "dummy_device",
+            "description": "simulated device for testing",
+            "commands": {
+                "success": [],
+                "fail": []
+            }
         }
-    ]
+    }
 }

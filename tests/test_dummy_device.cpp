@@ -11,7 +11,7 @@ bool compare_device_results(const DeviceResult& res1, const DeviceResult& res2) 
 }
 
 bool test_dummy_device() {
-    std::string device_id = "def_device";
+    std::string device_id = "dummy_test";
     int64_t user_id = 0;
     Direction dir = Direction::TO_DEVICE;
     DummyDevice device(device_id);

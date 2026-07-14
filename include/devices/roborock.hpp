@@ -19,14 +19,10 @@ public:
 
     ~Roborock() = default;
 
-    std::vector<std::string> get_commands() const override;
-
 private:
     std::string m_base_url;
     std::string m_vacuum_entity_id;
     std::string m_button_entity_prefix;
-    std::vector<std::string> m_routine_names;
-    std::vector<std::string> m_speed_values;
     const std::string m_token;
 
 protected:
