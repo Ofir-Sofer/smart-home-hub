@@ -10,7 +10,7 @@
                 "return_to_base": [],
                 "locate": [],
                 "clean_spot": [],
-                "run_routine": ["deep", "deep_plus", "public", "routine_clean"],
+                "run_routine": ["deep", "deep_plus", "public", "full"],
                 "set_fan_speed": ["off", "quiet", "balanced", "turbo", "max", "custom", "max_plus", "smart_mode"]
             }
         },

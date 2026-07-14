@@ -45,10 +45,11 @@ std::string LlamaEncoder::build_device_match_prompt(const std::string &user_inpu
         << "using it exactly as written — never invent or modify a device_id."
         << "\nIf the request does not clearly match any device, respond with exactly: UNKNOWN"
         << "\nExamples:"
-        << "\nUser said: turn on the ac -> mini_inverter\n"
-        << "\nUser said: clean the living room -> roborock\n"
-        << "\nUser said: set temperature to 24 -> mini_inverter\n"
-        << "\nUser said: run clean program public -> roborock\n"
+        << "\nUser said: turn on the ac -> mini_inverter"
+        << "\nUser said: clean the living room -> roborock"
+        << "\nUser said: set temperature to 24 -> mini_inverter"
+        << "\nUser said: run clean program public -> roborock"
+        << "\nUser said: stop vacuum -> roborock"
         << "\nUser said: whats the weather -> UNKNOWN\n"
         << "\nUser said: " << user_input << " -> ";
     return oss.str();
@@ -65,9 +66,10 @@ std::string LlamaEncoder::build_command_match_prompt(const std::string &user_inp
         << "\nUser said: start cleaning -> start"
         << "\nUser said: come back to the dock -> return_to_base"
         << "\nUser said: find the vacuum -> locate"
-        << "\nUser said: set ac temperature to 24 -> set_temp\n"
-        << "\nUser said: run clean program public -> run_routine\n"
-        << "\nUser said: " << user_input << "->";
+        << "\nUser said: set ac temperature to 24 -> set_temp"
+        << "\nUser said: run clean program public -> run_routine"
+        << "\nUser said: set mini inverter volume to high -> UNKNOWN\n"
+        << "\nUser said: " << user_input << " -> ";
     return oss.str();
 }
 
@@ -76,14 +78,14 @@ std::string LlamaEncoder::build_command_ranged_value_match_prompt(const std::str
     oss << "Device: " << device_id
         << "\nCommand: " << command
         << "\nAllowed range: " << range.first << " to " << range.second << " (inclusive)"
-        << "\nUser said: " << user_input
         << "\nWhat numeric value best matches the user's request? Respond with exactly one integer "
         << "between " <<  range.first << " and " << range.second << "."
         << "\nIf the request does not clearly specify a value in that range, respond with exactly: UNKNOWN"
         << "\nExamples:"
         << "\nUser said: set temperature to 24 -> 24"
         << "\nUser said: make it warmer, like 30 degrees -> 30"
-        << "\nUser said: set temperature to 999 -> UNKNOWN";
+        << "\nUser said: set temperature to 999 -> UNKNOWN\n"
+        << "\nUser said: " << user_input << " -> ";
     return oss.str();
 }
 
@@ -92,7 +94,6 @@ std::string LlamaEncoder::build_command_fixed_value_match_prompt(const std::stri
     oss << "Device: " << device_id
         << "\nCommand: " << command
         << "\nAllowed values: " << value_list
-        << "\nUser said: " << user_input
         << "\nWhich value best matches the user's request? Respond with exactly one value from the "
         << "list above, using it exactly as written — never invent or modify a value."
         << "\nThe value must be exactly one of the allowed values listed — if the request does not clearly "
@@ -100,8 +101,9 @@ std::string LlamaEncoder::build_command_fixed_value_match_prompt(const std::stri
         << "\nExamples:"
         << "\nUser said: run the public routine -> public"
         << "\nUser said: do a deep clean plus -> deep_plus"
-        << "\nUser said: run clean program public -> public\n"
-        << "\nUser said: run routine xyzabc -> UNKNOWN";
+        << "\nUser said: run clean program public -> public"
+        << "\nUser said: run routine xyzabc -> UNKNOWN\n"
+        << "\nUser said: " << user_input << " -> ";
     return oss.str();
 }
 
