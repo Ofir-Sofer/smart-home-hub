@@ -144,6 +144,8 @@ docker compose up -d
 
 This runs Home Assistant Container with its config persisted to `/mnt/storage/homeassistant` (adjust the volume path in `docker/compose.yml` if your storage layout differs). Once it's up, complete the one-time setup at `http://<pi-ip>:8123`, add your Roborock vacuum through HA's native Roborock integration, and generate a long-lived access token under your HA profile — you'll need it for `HA_TOKEN` below.
 
+The compose file also carries two [Watchtower](https://github.com/nicholas-fedor/watchtower) labels: `watchtower.enable=true` opts the container in (for Watchtower instances running with label-based selection), and `watchtower.monitor-only=true` makes Watchtower only report new Home Assistant images instead of updating automatically — HA updates can break integrations, so upgrading stays a manual decision. If you don't run Watchtower, these labels have no effect.
+
 #### Environment variables
 
 ```bash
