@@ -11,7 +11,7 @@
 
 class LlamaEncoder : public SmartEncoder {
 public:
-    LlamaEncoder(DeviceRegistry& registry, const std::string& model_path);
+    LlamaEncoder(const DeviceRegistry& registry, const std::string& model_path);
 
     ~LlamaEncoder();
     LlamaEncoder(const LlamaEncoder&) = delete;
