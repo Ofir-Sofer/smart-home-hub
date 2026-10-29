@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <ctime>
 #include <filesystem>
+#include <cstdio>
 
 #include "message_handling/voice_msg_manager/voice_msg_manager.hpp"
 #include "queues/message_queue.hpp"
@@ -44,8 +45,8 @@ void VoiceMsgManager::process_recordings() {
             if (result == "") {
                 m_bot.getApi().sendMessage(user_id, "recording was empty");
             } else {
-            raw_msg.m_raw_input = result;
-            m_main_queue.push(raw_msg);
+                raw_msg.m_raw_input = result;
+                m_main_queue.push(raw_msg);
             }
             cleanup_audio_files(file_path, target_wav);
         } else {
