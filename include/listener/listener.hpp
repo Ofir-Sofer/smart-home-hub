@@ -12,7 +12,7 @@
 
 class Listener {
 public:
-    Listener(MessageQueue<RawMessage>& main_queue, VoiceMsgManager& voice_manager, TgBot::Bot& bot, std::string temp_path,const std::string& authorized_users_path);
+    Listener(MessageQueue<RawMessage>& main_queue, VoiceMsgManager& voice_manager, TgBot::Bot& bot, const std::string& temp_path, const std::string& authorized_users_path);
 
     void start();
     void shutdown();

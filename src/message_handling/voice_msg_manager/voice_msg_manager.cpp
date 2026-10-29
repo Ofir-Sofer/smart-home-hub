@@ -18,7 +18,7 @@ void VoiceMsgManager::process_recordings() {
             std::string file_path = raw_msg.m_raw_input;
             int64_t user_id = raw_msg.m_user_id;
             time_t now = time(nullptr);
-            std::string target_wav = std::filesystem::path(m_temp_path) / (std::to_string(now) + ".wav");
+            std::string target_wav = (std::filesystem::path(m_temp_path) / ("voice_" + std::to_string(now) + ".wav")).string();
             std::string convert_cmd = "ffmpeg -i " + file_path + " " + target_wav + " 2>/dev/null";
             FILE* pipe = popen(convert_cmd.c_str(), "r");
             if (!pipe) {
