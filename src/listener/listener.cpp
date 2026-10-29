@@ -8,8 +8,8 @@
 
 #include "listener/listener.hpp"
 
-Listener::Listener(MessageQueue<RawMessage>& main_queue, VoiceMsgManager& voice_manager, TgBot::Bot& bot, const std::string& authorized_users_path)
-    :m_main_queue(main_queue), m_voice_manager(voice_manager), m_bot(bot){
+Listener::Listener(MessageQueue<RawMessage>& main_queue, VoiceMsgManager& voice_manager, TgBot::Bot& bot, std::string temp_path, const std::string& authorized_users_path)
+    :m_main_queue(main_queue), m_voice_manager(voice_manager), m_bot(bot), m_temp_path(temp_path){
         std::ifstream file(authorized_users_path);
         if (!file.is_open()) {
             throw std::runtime_error("Could not open: " + authorized_users_path);
@@ -36,7 +36,7 @@ void Listener::start() {
                 std::string file_id = message->voice->fileId;
                 TgBot::File::Ptr file_info = m_bot.getApi().getFile(file_id);
                 std::string file_content = m_bot.getApi().downloadFile(file_info->filePath);
-                std::string file_path = "/tmp/smart_home_hub/audio/" + file_id + ".ogg";
+                std::string file_path = std::filesystem::path(m_temp_path) / (file_id + ".ogg");
                 std::ofstream file(file_path, std::ios::binary);
                 file.write(file_content.c_str(), file_content.size());
                 file.close();

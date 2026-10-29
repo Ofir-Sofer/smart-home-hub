@@ -8,8 +8,8 @@
 
 class VoiceMsgManager {
 public:
-    VoiceMsgManager(MessageQueue<RawMessage>& main_queue, TgBot::Bot& bot)
-    :m_main_queue(main_queue), m_recording_queue("recordings_path"), m_bot(bot){};
+    VoiceMsgManager(MessageQueue<RawMessage>& main_queue, TgBot::Bot& bot, std::string temp_path)
+    :m_main_queue(main_queue), m_recording_queue("recordings_path"), m_bot(bot), m_temp_path(temp_path){};
 
     void process_recordings();
 
@@ -20,4 +20,5 @@ private:
     MessageQueue<RawMessage>& m_main_queue;
     MessageQueue<RawMessage> m_recording_queue;
     TgBot::Bot& m_bot;
+    std::string m_temp_path;
 };
