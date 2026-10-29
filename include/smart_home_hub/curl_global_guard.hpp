@@ -1,6 +1,6 @@
 #pragma once
 
-// RAII guard for libcurl's global state: init on construction (throws on failure), cleanup on destruction. Must outlive every curl user, so declare it first.
+// RAII guard for libcurl's global state: init on construction (throws on failure), cleanup on destruction. Must be declared before any curl user.
 class CurlGlobalGuard {
 public:
     CurlGlobalGuard();
