@@ -33,6 +33,15 @@ namespace {
         }
         return std::make_unique<SimpleEncoder>();
     }
+
+    void reply_to_user(TgBot::Bot& telegram_bot, int64_t user_id, const std::string& text) {
+        try {
+            telegram_bot.getApi().sendMessage(user_id, text);
+            std::cout << text << "\n";
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to reply to user " << user_id << ": " << e.what() << '\n';
+        }
+    }
 }
 
 SmartHomeHub::SmartHomeHub()
@@ -58,6 +67,9 @@ SmartHomeHub::~SmartHomeHub() {
         m_voice_manager_thread.join();
     }
     m_main_queue.shutdown(); // ensure queue shutdown regardless of shutdown path
+    if (m_parser_thread.joinable()) {
+        m_parser_thread.join();
+    }
     m_device_registry.shutdown_all_queues();
     // device queues are shut down, device threads will exit their loops and can be joined
     for (std::thread& th : m_device_threads) {
@@ -78,21 +90,30 @@ void SmartHomeHub::run() {
 
     m_voice_manager_thread = std::thread(&VoiceMsgManager::process_recordings, &m_voice_manager);
     m_listener_thread = std::thread(&Listener::start, &m_listener);
+    m_parser_thread = std::thread(&SmartHomeHub::parser_loop, this);
 
     std::cout << "Smart Home Hub ready for input\n";
-    // main loop
-    while (true) {
-        ParserResult res = m_parser.process_message();
-        if (res.m_status == ParserStatus::SHUTDOWN) {
-            break;
-        } else if (res.m_status == ParserStatus::ROUTING_ERROR) {
-            m_telegram_bot.getApi().sendMessage(res.m_user_id, "device wasnt found.");
-            std::cout << "device wasnt found\n";
-        } else if (res.m_status == ParserStatus::ENCODE_ERROR) {
-            m_telegram_bot.getApi().sendMessage(res.m_user_id, "there was an issue with user message.");
-            std::cout << "there was an issue with user message\n";
-        } else {
-            std::cout << "message pushed successfully\n";
+    m_shutdown_signal.wait();
+}
+
+void SmartHomeHub::parser_loop() {
+    try {
+        while (true) {
+            ParserResult res = m_parser.process_message();
+            if (res.m_status == ParserStatus::SHUTDOWN_REQUESTED) {
+                m_shutdown_signal.request();
+            } else if (res.m_status == ParserStatus::QUEUE_CLOSED) {
+                break;
+            } else if (res.m_status == ParserStatus::ROUTING_ERROR) {
+                reply_to_user(m_telegram_bot, res.m_user_id, "device wasnt found.");
+            } else if (res.m_status == ParserStatus::ENCODE_ERROR) {
+                reply_to_user(m_telegram_bot, res.m_user_id, "there was an issue with user message.");
+            } else {
+                std::cout << "message pushed successfully\n";
+            }
         }
+    } catch (const std::exception& e) {
+        std::cerr << "Parser loop failed: " << e.what() << '\n';
+        m_shutdown_signal.request();
     }
 }

@@ -1,4 +1,3 @@
-#include <string>
 #include <optional>
 #include <iostream>
 
@@ -14,7 +13,7 @@ ParserResult Parser::process_message() {
         RawMessage raw_msg = wrapped_raw_msg.value();
         std::cout << "User sent: " << raw_msg.m_raw_input << "\n";
         if (raw_msg.m_raw_input == "SHUTDOWN!!!") {
-            ParserResult parse_res = {ParserStatus::SHUTDOWN, raw_msg.m_user_id};
+            ParserResult parse_res = {ParserStatus::SHUTDOWN_REQUESTED, raw_msg.m_user_id};
             return parse_res;
         }
         try {
@@ -33,8 +32,8 @@ ParserResult Parser::process_message() {
             return parse_res;
         }
     } else {
-        //if main queue has an empty msg this signals - kill program
-        ParserResult parse_res = {ParserStatus::SHUTDOWN, 0};
-            return parse_res;
+        // the input queue was closed, stop processing
+        ParserResult parse_res = {ParserStatus::QUEUE_CLOSED, 0};
+        return parse_res;
     }
 }
