@@ -96,6 +96,10 @@ void SmartHomeHub::run() {
     m_shutdown_signal.wait();
 }
 
+void SmartHomeHub::request_shutdown() {
+    m_shutdown_signal.request();
+}
+
 void SmartHomeHub::parser_loop() {
     try {
         while (true) {

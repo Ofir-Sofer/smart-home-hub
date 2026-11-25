@@ -32,6 +32,8 @@ public:
 
     void run();
 
+    void request_shutdown();
+
 private:
     HubConfig m_hub_config;
     CurlGlobalGuard m_curl_global_guard;
