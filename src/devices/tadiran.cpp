@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <cerrno>
+#include <signal.h>
 
 #include "devices/tadiran.hpp"
 #include "common/message.hpp"
@@ -33,7 +34,11 @@ Tadiran::Tadiran(const std::string &device_id)
     m_bridge_pid = fork();
     if (m_bridge_pid == 0) {
         // we are the child — run Python
+        sigset_t signals;
+        sigemptyset(&signals);
+        pthread_sigmask(SIG_SETMASK, &signals, nullptr); // start subproccess with empty mask
         execl("/usr/bin/python3", "python3", "scripts/tadiran_bridge.py", nullptr);
+        _exit(127);
     } else if (m_bridge_pid > 0) {
         // we are the parent — wait for bridge to start
         sleep(1);
