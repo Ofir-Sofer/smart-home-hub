@@ -13,7 +13,7 @@ A multithreaded C++ smart home hub running on Raspberry Pi 5 with Hailo8 AI HAT.
 - **Python bridges for IoT devices** — lightweight Python bridges handle device-specific protocols (Tuya, etc.)
 - **Home Assistant integration** — devices exposed via Home Assistant (e.g. Roborock vacuum) are controlled over its REST API, no separate bridge process needed
 - **User feedback** — every command gets a Telegram response: confirmation on receipt, and device result (success/failure with command details) on completion
-- **Graceful shutdown** — clean thread and process teardown on exit
+- **Graceful shutdown** — Ctrl+C, `SIGTERM` (`kill`, `systemctl stop`) and the `SHUTDOWN!!!` command all end in the same ordered teardown: threads stopped and joined, bridge processes terminated, temp files removed
 
 ## Architecture
 
@@ -27,10 +27,10 @@ User (Telegram) ←──────── FeedbackListener ←─────�
 
 Voice command flow:
 ```
-Voice message → Listener downloads .ogg → pushes "voice_msg:/tmp/path"
-→ Parser converts .ogg → .wav (ffmpeg)
+Voice message → Listener downloads .ogg to the temp dir → VoiceMsgManager queue
+→ VoiceMsgManager converts .ogg → .wav (ffmpeg)
 → hailo_speech_to_text.py runs Whisper on Hailo8
-→ transcribed text → LlamaEncoder → device command
+→ transcribed text → Main Queue → Parser → LlamaEncoder → device command
 ```
 
 For devices using a Python bridge:
@@ -49,6 +49,8 @@ Device Thread → RoborockDevice → [HTTP REST, libcurl] → Home Assistant →
 - **Factory Method Pattern** — `DeviceFactory` maps device type strings to constructors, loaded from JSON config at runtime. Construction failures are isolated per-device (logged and skipped) rather than crashing the whole hub.
 - **Registry Pattern** — `DeviceRegistry` manages device instances and their dedicated message queues.
 - **Producer-Consumer** — thread-safe `MessageQueue<T>` with mutex and condition variable. Each device gets its own queue and thread.
+- **Composition root** — `SmartHomeHub` owns every module as a member and manages the whole lifecycle: modules are built in declaration order by its constructor, threads are started in `run()`, and its destructor runs the single shutdown sequence. `main()` only handles process-level concerns (signals) and creates the hub.
+- **RAII guards** — `CurlGlobalGuard` (libcurl global init/cleanup) and `TempDirGuard` (temp directory create/remove) tie process-wide resources to object lifetimes. They're declared first in `SmartHomeHub`, so they're set up before and released after every module that uses them.
 
 ### LLM Command Resolution
 
@@ -65,10 +67,29 @@ Command and value legality is validated at the **device** level, not the encoder
 ### Threading Model
 
 ```
-Listener Thread:    Telegram polling → Main Queue
-Main Thread:        Main Queue → Parser → Server → Device Queues
+Main Thread:        builds SmartHomeHub, starts all threads, then waits on ShutdownSignal
+Signal Thread:      sigwait (SIGINT/SIGTERM) → SmartHomeHub::request_shutdown()
+Listener Thread:    Telegram polling → Main Queue (voice → VoiceMsgManager queue)
+Voice Thread:       VoiceMsgManager queue → ffmpeg + Whisper (Hailo8) → Main Queue
+Parser Thread:      Main Queue → Parser → Server → Device Queues
 Device Thread (×N): Device Queue → Device → FeedbackListener → User
 ```
+
+### Lifecycle and Shutdown
+
+Shutdown is split into **requesting** and **performing**:
+
+- **Requesting** — any component can ask for a shutdown through `ShutdownSignal` (a flag, mutex and condition variable): the signal thread on Ctrl+C/`SIGTERM`, the parser when the user sends `SHUTDOWN!!!`, or the parser itself if it hits an unexpected error. Multiple requests are harmless, and a request made before the hub starts waiting is remembered.
+- **Performing** — only `SmartHomeHub`'s destructor runs the teardown, always in the same order, stopping producers before consumers:
+  1. Listener (no new input)
+  2. Voice manager
+  3. Main queue → parser thread exits
+  4. Device queues → device threads exit
+  5. Members destroyed in reverse declaration order (devices stop their bridge processes; the RAII guards release curl and the temp directory last)
+
+Signal handling lives in `main()`, not in the hub, because signal settings are process-wide. SIGINT and SIGTERM are blocked in every thread and collected by a dedicated thread with `sigwait`, which calls ordinary code (`request_shutdown()`) instead of running logic inside an async signal handler. Child processes the hub starts (the Tadiran bridge) reset their signal mask before `exec`, so they don't inherit the hub's blocked signals.
+
+Startup errors (a missing `TELEGRAM_TOKEN`, an invalid `settings.json`) are reported by the throwing constructors and printed once by `main()`, which exits with code 1.
 
 ## Building
 
@@ -177,6 +198,7 @@ cmake --build build
 ```
 
 The Tadiran bridge starts and stops automatically with the hub.
+To stop the hub, press Ctrl+C, send `SIGTERM` (e.g. `kill <pid>`), or send `SHUTDOWN!!!` from Telegram — all three shut it down gracefully.
 
 ### Run tests
 
@@ -210,7 +232,7 @@ roborock:set_fan_speed:quiet
 roborock:run_routine:public
 ```
 
-Type `SHUTDOWN!!!` to exit cleanly.
+Type `SHUTDOWN!!!` to shut the hub down gracefully (same as Ctrl+C).
 
 ## Configuration
 
