@@ -55,6 +55,6 @@ int main() {
         std::cerr << e.what() << '\n';
         return 1;
     }
-
+    std::cout << "Program shutdown gracefully\n";
     return 0;
 }

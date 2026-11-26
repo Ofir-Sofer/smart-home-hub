@@ -36,7 +36,7 @@ Tadiran::Tadiran(const std::string &device_id)
         // we are the child — run Python
         sigset_t signals;
         sigemptyset(&signals);
-        pthread_sigmask(SIG_SETMASK, &signals, nullptr); // start subproccess with empty mask
+        pthread_sigmask(SIG_SETMASK, &signals, nullptr); // don't inherit the hub's blocked signals (SIGTERM must reach the bridge)
         execl("/usr/bin/python3", "python3", "scripts/tadiran_bridge.py", nullptr);
         _exit(127);
     } else if (m_bridge_pid > 0) {

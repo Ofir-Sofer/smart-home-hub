@@ -1,5 +1,7 @@
 #include <iostream>
 #include <optional>
+#include <string>
+#include <cstdint>
 
 #include "smart_home_hub/smart_home_hub.hpp"
 #include "smart_home_hub/hub_config.hpp"
@@ -66,7 +68,7 @@ SmartHomeHub::~SmartHomeHub() {
     if (m_voice_manager_thread.joinable()) {
         m_voice_manager_thread.join();
     }
-    m_main_queue.shutdown(); // ensure queue shutdown regardless of shutdown path
+    m_main_queue.shutdown();
     if (m_parser_thread.joinable()) {
         m_parser_thread.join();
     }
@@ -77,7 +79,7 @@ SmartHomeHub::~SmartHomeHub() {
             th.join();
         }
     }
-    std::cout << "program shutdown\n";
+    std::cout << "threads stopped, releasing resources.\n";
 }
 
 void SmartHomeHub::run() {
