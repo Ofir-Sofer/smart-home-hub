@@ -9,7 +9,7 @@
 namespace {
     class SignalWatcher {
     public:
-        SignalWatcher(sigset_t& signals, SmartHomeHub& hub);
+        SignalWatcher(const sigset_t& signals, SmartHomeHub& hub);
         ~SignalWatcher();
 
         SignalWatcher(const SignalWatcher&) = delete;
@@ -20,7 +20,7 @@ namespace {
         std::thread m_sig_thread;
     };
 
-    SignalWatcher::SignalWatcher(sigset_t& signals, SmartHomeHub& hub)
+    SignalWatcher::SignalWatcher(const sigset_t& signals, SmartHomeHub& hub)
         : m_sig_thread([signals, &hub] {
             int sig = 0;
             sigwait(&signals, &sig);
@@ -31,8 +31,8 @@ namespace {
     {}
 
     SignalWatcher::~SignalWatcher() {
-        pthread_kill(m_sig_thread.native_handle(), SIGUSR1);
         if (m_sig_thread.joinable()) {
+            pthread_kill(m_sig_thread.native_handle(), SIGUSR1);
             m_sig_thread.join();
         }
     }
