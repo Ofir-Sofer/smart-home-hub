@@ -10,7 +10,8 @@
 
 enum class ParserStatus {
     SUCCESS,
-    SHUTDOWN,
+    SHUTDOWN_REQUESTED,
+    QUEUE_CLOSED,
     ENCODE_ERROR,
     ROUTING_ERROR
 };
@@ -24,7 +25,7 @@ class Parser {
 public:
     Parser(MessageQueue<RawMessage>& main_queue, IEncoder& encoder, Server& server)
     :m_main_queue(main_queue), m_encoder(encoder), m_server(server){};
-    
+
     ParserResult process_message();
 
 private:

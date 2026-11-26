@@ -12,11 +12,11 @@ public:
     virtual ~SmartEncoder() = default;
 
 protected:
-    SmartEncoder(DeviceRegistry& registry);
+    SmartEncoder(const DeviceRegistry& registry);
 
     [[nodiscard]] static std::string join_comma_separated(const std::vector<std::string>& items, const std::string& separator = ", ");
 
-    DeviceRegistry& m_registry;
+    const DeviceRegistry& m_registry;
     const std::string m_device_list;
 
 private:

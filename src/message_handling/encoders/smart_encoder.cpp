@@ -3,7 +3,7 @@
 
 #include "message_handling/encoders/smart_encoder.hpp"
 
-SmartEncoder::SmartEncoder(DeviceRegistry &registry)
+SmartEncoder::SmartEncoder(const DeviceRegistry& registry)
     :m_registry(registry), m_device_list(create_device_list(registry)){}
 
 // Builds a newline-separated list of available devices for stage-1 (device selection)

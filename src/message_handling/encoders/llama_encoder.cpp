@@ -14,7 +14,7 @@
 
 namespace { void output_cleanup(std::string& output); }
 
-LlamaEncoder::LlamaEncoder(DeviceRegistry& registry, const std::string& model_path)
+LlamaEncoder::LlamaEncoder(const DeviceRegistry& registry, const std::string& model_path)
 :SmartEncoder(registry){
     llama_model_params model_params = llama_model_default_params();
     llama_log_set([](ggml_log_level level, const char* text, void* user_data) {
